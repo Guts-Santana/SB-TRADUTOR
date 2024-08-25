@@ -26,7 +26,7 @@ std::vector<std::string> File::Instructions(){
 	{
 	case ADD:
 	case SUB:
-		Get_ADDSUB(object[address]);
+		Write_ADDSUB(object[address]);
 		break;
 	case DIV:
 	case MUL:
@@ -37,9 +37,11 @@ std::vector<std::string> File::Instructions(){
 	case JMPZ:
 		break;
 	case COPY:
+		Write_COPY();
 		break;
 	case LOAD:
 	case STORE:
+		Write_ADDSUB(object[address]);
 		break;
 	case INPUT:
 		break;
@@ -52,18 +54,17 @@ std::vector<std::string> File::Instructions(){
 }
 
 void File::Get_Const(){
-	int i = stop + 1;
-	while (i < object.size())
+	while (address < object.size())
 	{
-		if(object[i] == 0)
+		if(object[address] == 0)
 		{
-			variable.push_back(i);
+			variable.push_back(address);
 		}
 		else
 		{
-			constante.push_back(i);
+			constante.push_back(address);
 		}
-		i++;
+		address++;
 	}
 }
 
@@ -76,27 +77,31 @@ void File::WriteFile(){
         std::cerr << "Unable to open file for writing" << std::endl;
         return;
     }
-	while (address < object.size())
+	file << "section .text" << '\n';
+	while (!stop)
 	{
-		if (stop == 0)
+		command = Instructions();
+		if (object[address] == COPY)
 		{
-			command = Instructions();
-			for (const std::string &i : command)
-			{
-				file << i << ' ';
-			}
+			address = address + 3;
 		}
-		else
+		else if (object[address] == STOP)
 		{
-			Get_Const();
-			break;
+			address++;
+		}
+		else{
+			address = address + 2;
+		}
+		for (const std::string &i : command)
+		{
+			file << i;
 		}
 	}
-	
-    file.close();
+
+	Get_Const();
 }
 
-std::vector<std::string> File::Get_ADDSUB(int opc)
+std::vector<std::string> File::Write_ADDSUB(int opc)
 {
 	std::vector<std::string> command;
 	std::string addr;
@@ -114,13 +119,11 @@ std::vector<std::string> File::Get_ADDSUB(int opc)
 	command.push_back("[");
 	command.push_back(addr);
 	command.push_back("]");
-	command.push_back(" X ");	//To use in \n
-	
-	address = address + 2;
+	command.push_back("\n");	
 	return command;
 }
 
-std::vector<std::string> File::Get_LOADSTORE(int opc)
+std::vector<std::string> File::Write_LOADSTORE(int opc)
 {
 	std::vector<std::string> command;
 	std::string addr;
@@ -133,7 +136,7 @@ std::vector<std::string> File::Get_LOADSTORE(int opc)
 		command.push_back("[");
 		command.push_back(addr);
 		command.push_back("]");
-		command.push_back(" X ");		//To use in \n
+		command.push_back("\n");
 
 	}
 	else
@@ -142,8 +145,67 @@ std::vector<std::string> File::Get_LOADSTORE(int opc)
 		command.push_back(addr);
 		command.push_back("], ");
 		command.push_back("eax");
-		command.push_back(" X ");
+		command.push_back("\n");
 	}
-	address = address + 2;
 	return command;
 }
+
+std::vector<std::string> File::Write_COPY() // precisa de um push
+{
+	std::string addr;
+	std::vector<std::string> command;
+
+	command.push_back("push eax");
+	command.push_back("\n");
+
+	addr = "a" + std::to_string(address+1);
+	command.push_back("mov eax, [");
+	command.push_back(addr);
+	command.push_back("]");
+	command.push_back("\n");
+
+	addr = "a" + std::to_string(address+2);
+	command.push_back("mov [");
+	command.push_back(addr);
+	command.push_back("], ");
+	command.push_back("eax");
+	command.push_back("\n");
+
+	command.push_back("pop eax");
+	command.push_back("\n");
+
+	return command;
+}
+
+std::vector<std::string> File::Write_STOP()
+{
+	stop = true;
+	std::vector<std::string> command;
+	command.push_back("mov eax, 1");
+	command.push_back("\n");
+	command.push_back("mov ebx, 0");
+	command.push_back("\n");
+	command.push_back("int 80h");
+	command.push_back("\n");
+
+	return command;
+}
+
+std::vector<std::string> File::Write_Const()
+{
+	int i = 0;
+	std::vector<std::string> command;
+	std::string addr;
+
+	command.push_back("section .data");
+	command.push_back("\n");
+	while (i < constante.size())
+	{
+		addr = "a" + std::to_string(constante[i]);
+		command.push_back(addr);
+		command.push_back(" dd ");
+		command.push_back(std::to_string(constante[i]));
+		command.push_back("\n");
+	}
+}
+

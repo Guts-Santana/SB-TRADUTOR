@@ -11,7 +11,7 @@ class File{
 	private:
 		std::vector<int32_t> object;
 		std::string output_filename;
-		int stop;
+		bool stop;
 		int address;
 
 		std::vector<int> constante;
@@ -24,7 +24,15 @@ class File{
 		void Get_Const();
 		void WriteFile();
 
-		std::vector<std::string> Get_ADDSUB(int opc);
+		std::vector<std::string> Write_ADDSUB(int opc);
+		std::vector<std::string> Write_LOADSTORE(int opc);
+		std::vector<std::string> Write_COPY();
+		std::vector<std::string> Write_STOP();
+
+		std::vector<std::string> Write_Const();
+
+
+
 };
 
 
