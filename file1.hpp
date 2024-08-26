@@ -15,23 +15,31 @@ class File{
 		int address;
 
 		std::vector<int> constante;
-		std::vector<int> variable;
+		std::vector<uint> variable;
+		std::vector<int> jmp_address;
 
 	public:
 		void ReadFile(std::string file);
-		std::vector<std::string> Instructions();
-
+		
+		void GetJumps();
 		void Get_Const();
 		void WriteFile();
 
+		std::vector<std::string> Instructions();
+
 		std::vector<std::string> Write_ADDSUB(int opc);
+		std::vector<std::string> Write_MUL();
+		std::vector<std::string> Write_DIV();
+		std::vector<std::string> Write_JMP();
 		std::vector<std::string> Write_LOADSTORE(int opc);
 		std::vector<std::string> Write_COPY();
 		std::vector<std::string> Write_STOP();
 
 		std::vector<std::string> Write_Const();
+		std::vector<std::string> Write_Variable();
+		std::vector<std::string> Write_JMP_ADDRESS();
 
-
+		
 
 };
 

@@ -2,8 +2,8 @@
 
 int main(){
 	File R;
-	R.ReadFile("binario.obj");
-	R.Print();
+	R.ReadFile("fatorial.obj");
+	R.WriteFile();
 
 	return 0;
 }
