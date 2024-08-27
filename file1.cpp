@@ -336,13 +336,19 @@ std::vector<std::string> File::Write_DIV()
 	std::string addr;
 	command.push_back("	push edx");
 	command.push_back("\n");
-	command.push_back("	cdq");
+	command.push_back("	push ebx");
 	command.push_back("\n");
-	command.push_back("	idiv [");
 
 	addr = "a" + std::to_string(object[address+1]);
+	command.push_back("	mov ebx, ");
 	command.push_back(addr);
-	command.push_back("]");
+	command.push_back("\n");
+	command.push_back("	cdq");
+	command.push_back("\n");
+	command.push_back("	idiv ebx");
+
+	command.push_back("\n");
+	command.push_back("	pop ebx");
 	command.push_back("\n");
 	command.push_back("	pop edx");
 	command.push_back("\n");

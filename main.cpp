@@ -2,7 +2,7 @@
 
 int main(){
 	File R;
-	R.ReadFile("fatorial.obj");
+	R.ReadFile("binario.obj");
 	R.WriteFile();
 
 	return 0;

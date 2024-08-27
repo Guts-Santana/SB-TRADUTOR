@@ -4,8 +4,11 @@ _start:
 	mov eax, [a29]
 jmp4:
 	push edx
+	push ebx
+	mov ebx, a28
 	cdq
-	idiv [a28]
+	idiv ebx
+	pop ebx
 	pop edx
 	mov [a30], eax
 	imul eax, [a28]
