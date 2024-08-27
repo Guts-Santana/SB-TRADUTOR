@@ -39,7 +39,9 @@ class File{
 		std::vector<std::string> Write_Variable();
 		std::vector<std::string> Write_JMP_ADDRESS();
 
-		
+		//std::vector<std::string> Write_Input();
+		//std::vector<std::string> Write_Output();
+
 
 };
 

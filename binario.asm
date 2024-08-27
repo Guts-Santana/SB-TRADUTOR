@@ -5,7 +5,7 @@ _start:
 jmp4:
 	push edx
 	push ebx
-	mov ebx, a28
+	mov ebx, [a28]
 	cdq
 	idiv ebx
 	pop ebx

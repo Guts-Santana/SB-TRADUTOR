@@ -5,7 +5,7 @@ _start:
 jmp4:
 	sub eax, [a23]
 	cmp eax, 0
-	jz jmp18
+	je jmp18
 	mov [a21], eax
 	imul eax, [a22]
 	mov [a22], eax

@@ -340,8 +340,9 @@ std::vector<std::string> File::Write_DIV()
 	command.push_back("\n");
 
 	addr = "a" + std::to_string(object[address+1]);
-	command.push_back("	mov ebx, ");
+	command.push_back("	mov ebx, [");
 	command.push_back(addr);
+	command.push_back("]");
 	command.push_back("\n");
 	command.push_back("	cdq");
 	command.push_back("\n");
@@ -403,3 +404,5 @@ std::vector<std::string> File::Write_Variable()
 	return command;
 }
 
+// 	std::vector<std::string> File::Write_Input(){}
+//	std::vector<std::string> File::Write_Output(){}
