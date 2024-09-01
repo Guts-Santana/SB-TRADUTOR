@@ -1,5 +1,8 @@
 #include "file1.hpp"
 
+extern "C" void input_number(int *address);
+extern "C" void output_number(int number);
+
 void File::ReadFile(std::string filename)
 {
   stop = 0;
@@ -399,6 +402,15 @@ std::vector<std::string> File::Write_Variable()
     i++;
   }
   return command;
+}
+
+int main()
+{
+  File R;
+  R.ReadFile("in_out.obj");
+  R.WriteFile();
+
+  return 0;
 }
 
 // 	std::vector<std::string> File::Write_Input(){}

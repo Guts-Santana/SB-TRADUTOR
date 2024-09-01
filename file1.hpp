@@ -6,9 +6,6 @@
 #include <string>
 #include <vector>
 
-extern "C" void input_number(int *address);
-extern "C" void output_number(int number);
-
 class File
 {
   // Vou usar eax como acumulador e ebx e ecx para outras coisas

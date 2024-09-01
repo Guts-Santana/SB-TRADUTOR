@@ -1,4 +1,4 @@
-#include "file1.cpp"
+#include "file1.hpp"
 
 int main()
 {
