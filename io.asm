@@ -1,110 +1,93 @@
 section .data
-    end_message db 10  ; Newline character
+    prompt db "Enter a number: ", 0
+    newline db 0x0A, 0    ; New line character
+
+section .bss
+    buffer resb 20        ; Reserve 20 bytes for input buffer
 
 section .text
-    global input_number, output_number
+    global input_number
+    global output_number
 
-; Função input_number
 input_number:
-    ; Salva os registradores que serão usados
     push ebp
     mov ebp, esp
-    sub esp, 12               ; Buffer de 12 bytes
 
-    ; Leitura da string
-    mov eax, 3                ; syscall número para sys_read
-    mov ebx, 0                ; 0 indica a entrada padrão (teclado)
-    lea ecx, [esp]            ; Endereço do buffer
-    mov edx, 12               ; Tamanho máximo da leitura
-    int 0x80                  ; Chamada de sistema
+    ; Load the address of the integer from the stack
+    mov eax, [ebp + 8]    ; EAX = address of the integer
 
-    ; Converte a string lida para um número
-    lea esi, [esp]            ; Ponteiro para o buffer
-    xor edi, edi              ; Zera edi (será usado como o número lido)
-    mov ecx, 0                ; Zera ecx (será usado para o sinal)
+    ; Print the prompt message
+    mov eax, 4            ; sys_write
+    mov ebx, 1            ; File descriptor 1 (stdout)
+    mov ecx, prompt       ; Pointer to the message
+    mov edx, 16           ; Length of the message
+    int 0x80
 
-    ; Verifica o sinal
-    cmp byte [esi], '-'       
-    jne .read_number          ; Se não for '-', vai para a leitura do número
-    mov ecx, 1                ; Indica que o número é negativo
-    inc esi                   ; Avança o ponteiro para o próximo caractere
+    ; Read user input
+    mov eax, 3            ; sys_read
+    mov ebx, 0            ; File descriptor 0 (stdin)
+    mov ecx, buffer       ; Buffer to store the input
+    mov edx, 20           ; Max number of bytes to read
+    int 0x80
 
-.read_number:
-    xor eax, eax              ; Zera eax para começar a construir o número
-.loop:
-    mov bl, [esi]             ; Lê um byte do buffer
-    cmp bl, 0                 ; Verifica se é o fim da string (null terminator)
-    je .done                  ; Se for, termina a leitura
-    sub bl, '0'               ; Converte caractere para número
-    imul eax, eax, 10         ; Multiplica o número atual por 10
-    add eax, ebx              ; Adiciona o dígito ao número
-    inc esi                   ; Avança para o próximo caractere
-    jmp .loop                 ; Continua no loop
+    ; Convert string to number
+    xor eax, eax          ; Clear EAX (result accumulator)
+    xor ebx, ebx          ; EBX will store the current digit
 
-.done:
-    cmp ecx, 0                ; Verifica se o número é negativo
-    je .final
-    neg eax                   ; Se for negativo, inverte o sinal
+.convert_loop:
+    movzx ecx, byte [buffer + ebx] ; Get the current character
+    cmp ecx, 0x0A         ; Check if it's a newline (Enter key)
+    je .done_conversion   ; If newline, end the loop
+    sub ecx, '0'          ; Convert ASCII to digit
+    imul eax, eax, 10     ; Multiply EAX by 10 (shift left by one decimal place)
+    add eax, ecx          ; Add the current digit
+    inc ebx               ; Move to the next character
+    jmp .convert_loop     ; Repeat the loop for the next character
 
-.final:
-    mov [ebp+8], eax          ; Armazena o número no endereço passado como argumento
+.done_conversion:
+    mov ebx, [ebp + 8]    ; Get the address where the result should be stored
+    mov [ebx], eax        ; Store the result at the provided address
 
-    ; Limpa a pilha e restaura os registradores
-    add esp, 12
-    pop ebx
-    pop esi
-    pop edi
-    pop ebp
+    leave
     ret
 
-; Função output_number
 output_number:
-    ; Salva os registradores
     push ebp
     mov ebp, esp
-    
-    ; Converte o número para string
-    mov eax, [ebp+8]          ; Número a ser impresso
-    sub esp, 12               ; Aloca buffer de saída (12 bytes na pilha)
-    lea esi, [esp+12]         ; Buffer de saída
-    mov byte [esi], 0         ; Null terminator
 
-    ; Verifica se o número é negativo
-    cmp eax, 0
-    jge .convert              ; Se for positivo, pula
-    neg eax                   ; Se for negativo, inverte o sinal
-    mov byte [esi-1], '-'     ; Adiciona o sinal de negativo
-    dec esi
+    ; Load the number from the stack
+    mov eax, [ebp + 8]
 
-.convert:
-    xor ecx, ecx              ; Zera ecx (contagem de dígitos)
-    mov ebx, 10               ; Divisor para obter cada dígito
+    mov ecx, buffer + 19  ; Point to the end of the buffer
+    mov ebx, 10           ; Set divisor to 10
+    mov byte [ecx], 0     ; Null-terminate the buffer
+    dec ecx               ; Move to the last character position in the buffer
 
-.print_loop:
-    xor edx, edx              ; Zera edx para a divisão
-    div ebx                   ; Divide eax por 10
-    add dl, '0'               ; Converte o dígito para caractere
-    dec esi                   ; Decrementa o ponteiro do buffer
-    mov [esi], dl             ; Armazena o caractere no buffer
-    inc ecx                   ; Incrementa a contagem de dígitos
-    test eax, eax             ; Verifica se o número acabou
-    jnz .print_loop           ; Se não acabou, continua
+.output_loop:
+    xor edx, edx          ; Clear EDX before division
+    div ebx               ; Divide EAX by 10
+    add dl, '0'           ; Convert remainder to ASCII
+    mov [ecx], dl         ; Store the digit in the buffer
+    dec ecx               ; Move buffer pointer back
+    test eax, eax         ; Check if quotient is zero
+    jnz .output_loop      ; If not, continue the loop
 
-    ; Se tinha sinal de negativo, decrementa o ponteiro
-    cmp byte [esi-1], '-'
-    jne .write_number
-    dec esi
-    inc ecx                   ; Incrementa a contagem para incluir o '-'
+    inc ecx               ; Move pointer forward to the first digit
 
-.write_number:
-    ; Escreve a string na saída padrão
-    mov eax, 4                ; syscall número para sys_write
-    mov ebx, 1                ; 1 indica a saída padrão (tela)
-    mov edx, ecx              ; Tamanho da string
-    lea ecx, [esi]            ; Endereço do buffer
-    int 0x80                  ; Chamada de sistema
+    ; Print the number
+    mov eax, 4            ; sys_write
+    mov ebx, 1            ; File descriptor 1 (stdout)
+    mov edx, buffer + 19  ; End of the buffer
+    sub edx, ecx          ; Calculate the length of the number string
+    mov ecx, ecx          ; Set ECX to the start of the number string
+    int 0x80
 
-    ; Libera espaço da pilha e restaura registradores
-    add esp, 12
-    pop ebp
+    ; Print a newline
+    mov eax, 4            ; sys_write
+    mov ebx, 1            ; File descriptor 1 (stdout)
+    mov ecx, newline      ; Pointer to the newline character
+    mov edx, 1            ; Length of the newline character
+    int 0x80
+
+    leave
     ret

@@ -13,7 +13,7 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CXX) $(LDFLAGS) $(OBJECTS) -o $(TARGET)
 
-file1.o: file1.cpp
+main.o: file1.cpp
 	$(CXX) $(CXXFLAGS) file1.cpp -o file1.o
 
 io.o: io.asm
