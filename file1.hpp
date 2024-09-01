@@ -9,7 +9,8 @@
 extern "C" void input_number(int *address);
 extern "C" void output_number(int number);
 
-class File {
+class File
+{
   // Vou usar eax como acumulador e ebx e ecx para outras coisas
 private:
   std::vector<int32_t> object;
@@ -20,7 +21,6 @@ private:
   std::vector<int> constante;
   std::vector<uint> variable;
   std::vector<int> jmp_address;
-
 
 public:
   void ReadFile(std::string file);
@@ -47,7 +47,8 @@ public:
   // std::vector<std::string> Write_Output();
 };
 
-enum opcodes {
+enum opcodes
+{
   ADD = 1,
   SUB = 2,
   MUL = 3,
