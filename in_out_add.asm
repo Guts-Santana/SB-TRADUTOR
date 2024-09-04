@@ -115,6 +115,10 @@ _start:
 section .data
   buffer db 11 dup(0)   ; buffer para armazenar a string convertida (máximo de 11 caracteres, incluindo o '\0')
   input_buffer db 12 dup(0) ; buffer para entrada do usuário (máximo de 11 dígitos + newline)
+  msg_lidos db 'Foram lidos ', 0
+  msg_escritos db 'Foram escritos ', 0
+  msg_bytes db ' bytes', 0
+  newline db 0xa, 0
 a12 dd 2
 section .bss
 a11 resd 1
