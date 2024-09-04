@@ -11,6 +11,17 @@ input_number:
     mov edx, 12                         ; max number of bytes to read
     int 0x80                            ; system call
 
+    push eax
+
+    ; Print "Bytes read: "
+    mov eax, 4                          ; syscall for sys_write
+    mov ebx, 1                          ; file descriptor (1 = stdout)
+    lea ecx, [msg_bytes_read]           ; address of the "Bytes read: " string
+    mov edx, 12                         ; length of the string
+    int 0x80                            ; system call
+
+    pop eax
+
     ; Print the value in eax (number of bytes read)
     call print_eax
 
@@ -69,6 +80,9 @@ output_number:
     mov edx, buffer + 10        ; Load the end of the buffer into edx
     sub edx, ecx                ; Subtract the current pointer (ecx) from the end of the buffer
     int 0x80                            ; system call
+
+    call print_eax                      ; print eax value
+
     push eax
 
     ; Print a newline after the number
@@ -78,12 +92,16 @@ output_number:
     mov edx, 1                          ; length = 1 byte
     int 0x80                            ; system call
 
+    ; Print "Bytes written: "
+    mov eax, 4                          ; syscall for sys_write
+    mov ebx, 1                          ; file descriptor (1 = stdout)
+    lea ecx, [msg_bytes_written]           ; address of the "Bytes read: " string
+    mov edx, 15                         ; length of the string
+    int 0x80                            ; system call
+
     pop eax
-    
     ; Print the value in eax (number of bytes written)
     call print_eax
-    
-
 
     pop eax
     leave
@@ -167,8 +185,8 @@ _start:
 section .data
   buffer db 11 dup(0)   ; buffer para armazenar a string convertida (máximo de 11 caracteres, incluindo o '\0')
   input_buffer db 12 dup(0) ; buffer para entrada do usuário (máximo de 11 dígitos + newline)
-  msg_bytes_read db 'Foram lidos ', 0
-  msg_bytes_written db 'Foram escritos ', 0
+  msg_bytes_read db 'Bytes lidos ', 0
+  msg_bytes_written db 'Bytes escritos ', 0
   msg_bytes db ' bytes', 0
   newline db 0xa, 0
 section .bss
