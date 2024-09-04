@@ -45,6 +45,13 @@ make_negative:
     neg eax                     ; negar o valor em eax (tornar negativo)
 
 end_input:
+    mov eax [ebp+8]             ; armazenar o número no endereço passado como argumento
+    mov eax, 4
+    mov ebx, 1
+    lea ecx, [ebp+8]
+    mov edx, 12
+    int 0x80
+
     leave
     ret
 

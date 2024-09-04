@@ -70,6 +70,9 @@ output_number:
     sub edx, ecx                ; Subtract the current pointer (ecx) from the end of the buffer
     int 0x80                            ; system call
 
+    ; Store the number of bytes written in eax (sys_write returns this in eax)
+    mov ebx, eax                 ; Store the result of sys_write (number of bytes written)
+
     ; Print the value in eax (number of bytes written)
     call print_eax
     
@@ -86,7 +89,7 @@ output_number:
     ret
 
 print_eax:
-    ; Convert the value in eax to a string and print it
+    ; Convert the value in eax (number of bytes) to a string and print it
     push eax
     mov ecx, buffer + 10                ; point to the end of the buffer
     mov byte [ecx], 0                   ; null-terminate the string
@@ -140,3 +143,33 @@ convert_loop:
 
 done:
     ret
+	global _start
+_start:
+    push eax
+    call input_number
+    mov [a13], eax
+    pop eax
+	mov eax, [a13]
+    push eax
+    call input_number
+    mov [a14], eax
+    pop eax
+	add eax, [a14]
+	mov [a13], eax
+    push eax
+    mov eax, [a13]
+    call output_number
+    pop eax
+	mov eax, 1
+	mov ebx, 0
+	int 80h
+section .data
+  buffer db 11 dup(0)   ; buffer para armazenar a string convertida (máximo de 11 caracteres, incluindo o '\0')
+  input_buffer db 12 dup(0) ; buffer para entrada do usuário (máximo de 11 dígitos + newline)
+  msg_bytes_read db 'Foram lidos ', 0
+  msg_bytes_written db 'Foram escritos ', 0
+  msg_bytes db ' bytes', 0
+  newline db 0xa, 0
+section .bss
+a13 resd 1
+a14 resd 1

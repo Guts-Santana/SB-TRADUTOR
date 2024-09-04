@@ -376,8 +376,8 @@ std::vector<std::string> File::Write_Const()
   command.push_back("\n");
   command.push_back("  buffer db 11 dup(0)   ; buffer para armazenar a string convertida (máximo de 11 caracteres, incluindo o '\\0')\n");
   command.push_back("  input_buffer db 12 dup(0) ; buffer para entrada do usuário (máximo de 11 dígitos + newline)\n");
-  command.push_back("  msg_lidos db 'Foram lidos ', 0\n");
-  command.push_back("  msg_escritos db 'Foram escritos ', 0\n");
+  command.push_back("  msg_bytes_read db 'Foram lidos ', 0\n");
+  command.push_back("  msg_bytes_written db 'Foram escritos ', 0\n");
   command.push_back("  msg_bytes db ' bytes', 0\n");
   command.push_back("  newline db 0xa, 0\n");
   while (i < constante.size())
@@ -459,7 +459,7 @@ void File::AppendIOFunctions(std::ofstream &file)
 int main()
 {
   File R;
-  R.ReadFile("in_out_add.obj");
+  R.ReadFile("in_out_var.obj");
   R.WriteFile();
 
   return 0;
