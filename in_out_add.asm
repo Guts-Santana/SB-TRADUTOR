@@ -76,24 +76,29 @@ int_to_string:
 
     xor edx, edx                 ; Limpa o registrador edx
     mov ebx, 10                  ; Divisor (base 10)
+    mov esi, eax                 ; Armazenar o valor original de EAX em ESI (para verificar sinal)
 
-    ; Verificar se o número é negativo
-    test eax, eax
-    jns convert_loop             ; Se positivo ou zero, ir para a conversão
+    ; Se o número for negativo, marcar e tornar positivo
+    test esi, esi                ; Testar se o número é negativo
+    jns convert_loop             ; Se for positivo, pular o próximo bloco
     neg eax                      ; Caso contrário, tornar positivo
-    dec ecx                      ; Reservar espaço para o sinal negativo
-    mov byte [ecx], '-'          ; Adicionar o sinal negativo na string
 
 convert_loop:
-    xor edx, edx                 ; Limpa edx
-    div ebx                      ; Divide eax por 10, o quociente fica em eax, o resto em edx
-    add dl, '0'                  ; Converte o dígito para ASCII
+    xor edx, edx                 ; Limpa edx para evitar lixo
+    div ebx                      ; Divide eax por 10, o quociente vai para eax e o resto para edx
+    add dl, '0'                  ; Converte o dígito para ASCII (0 a 9)
     dec ecx                      ; Decrementa o ponteiro da string
     mov [ecx], dl                ; Armazena o dígito convertido
     test eax, eax                ; Verifica se terminamos a divisão
-    jnz convert_loop             ; Se eax não for zero, continue convertendo
+    jnz convert_loop             ; Se eax ainda não é zero, continuar a conversão
 
-    inc ecx                      ; Ajustar o ponteiro de volta para o primeiro dígito
+    ; Agora adicionar o sinal negativo, se necessário
+    test esi, esi                ; Verificar novamente se o número original era negativo
+    jns done                     ; Se não era negativo, pular
+    dec ecx                      ; Decrementa o ponteiro
+    mov byte [ecx], '-'          ; Adicionar o sinal de menos
+
+done:
     ret
 	global _start
 _start:
