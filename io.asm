@@ -1,53 +1,33 @@
-section .data
-    prompt db "Enter a number: ", 0
-    newline db 0x0A, 0    ; New line character
-
-section .bss
-    buffer resb 20        ; Reserve 20 bytes for input buffer
-
 section .text
-    global input_number
-    global output_number
 
 input_number:
     push ebp
     mov ebp, esp
+    sub esp, 4          ; reservar espaço para uma variável local
+    
+    ; Ler a entrada como string
+    mov eax, 3          ; syscall número para leitura (sys_read)
+    mov ebx, 0          ; file descriptor (0 = stdin)
+    lea ecx, [input_buffer] ; buffer para armazenar a entrada do usuário
+    mov edx, 11         ; número máximo de bytes para ler (10 dígitos + newline)
+    int 0x80            ; chamada ao sistema
 
-    ; Load the address of the integer from the stack
-    mov eax, [ebp + 8]    ; EAX = address of the integer
+    ; Converter a string lida para um número inteiro
+    lea esi, [input_buffer] ; apontar para o início do buffer de entrada
+    xor eax, eax         ; limpar eax para acumular o número
+    xor ebx, ebx         ; limpar ebx (multiplicador)
+    
+convert_input_to_int:
+    mov bl, [esi]        ; carregar o próximo caractere
+    cmp bl, 10           ; verificar se é o caractere newline ('\n')
+    je input_done        ; se for newline, terminar
+    sub bl, '0'          ; converter o caractere para o valor numérico
+    imul eax, eax, 10    ; multiplicar o número atual por 10
+    add eax, ebx         ; adicionar o valor do dígito ao acumulador
+    inc esi              ; mover para o próximo caractere
+    jmp convert_input_to_int
 
-    ; Print the prompt message
-    mov eax, 4            ; sys_write
-    mov ebx, 1            ; File descriptor 1 (stdout)
-    mov ecx, prompt       ; Pointer to the message
-    mov edx, 16           ; Length of the message
-    int 0x80
-
-    ; Read user input
-    mov eax, 3            ; sys_read
-    mov ebx, 0            ; File descriptor 0 (stdin)
-    mov ecx, buffer       ; Buffer to store the input
-    mov edx, 20           ; Max number of bytes to read
-    int 0x80
-
-    ; Convert string to number
-    xor eax, eax          ; Clear EAX (result accumulator)
-    xor ebx, ebx          ; EBX will store the current digit
-
-.convert_loop:
-    movzx ecx, byte [buffer + ebx] ; Get the current character
-    cmp ecx, 0x0A         ; Check if it's a newline (Enter key)
-    je .done_conversion   ; If newline, end the loop
-    sub ecx, '0'          ; Convert ASCII to digit
-    imul eax, eax, 10     ; Multiply EAX by 10 (shift left by one decimal place)
-    add eax, ecx          ; Add the current digit
-    inc ebx               ; Move to the next character
-    jmp .convert_loop     ; Repeat the loop for the next character
-
-.done_conversion:
-    mov ebx, [ebp + 8]    ; Get the address where the result should be stored
-    mov [ebx], eax        ; Store the result at the provided address
-
+input_done:
     leave
     ret
 
@@ -55,39 +35,39 @@ output_number:
     push ebp
     mov ebp, esp
 
-    ; Load the number from the stack
-    mov eax, [ebp + 8]
+    ; Converter o número em eax para string
+    push eax
+    mov ecx, buffer + 10  ; local buffer, começando pelo final menos um (reserva espaço para '\0')
+    mov byte [ecx], 0     ; coloca o terminador nulo na última posição
+    call int_to_string    ; converter o número em eax para string
 
-    mov ecx, buffer + 19  ; Point to the end of the buffer
-    mov ebx, 10           ; Set divisor to 10
-    mov byte [ecx], 0     ; Null-terminate the buffer
-    dec ecx               ; Move to the last character position in the buffer
+    ; Imprimir o número
+    mov eax, 4             ; syscall número para escrita (sys_write)
+    mov ebx, 1             ; file descriptor (1 = stdout)
+    lea ecx, [buffer]      ; apontar para o buffer de string
+    mov edx, 11            ; comprimento máximo de 11 bytes (ajustado pelo número de dígitos)
+    int 0x80               ; chamada ao sistema
 
-.output_loop:
-    xor edx, edx          ; Clear EDX before division
-    div ebx               ; Divide EAX by 10
-    add dl, '0'           ; Convert remainder to ASCII
-    mov [ecx], dl         ; Store the digit in the buffer
-    dec ecx               ; Move buffer pointer back
-    test eax, eax         ; Check if quotient is zero
-    jnz .output_loop      ; If not, continue the loop
-
-    inc ecx               ; Move pointer forward to the first digit
-
-    ; Print the number
-    mov eax, 4            ; sys_write
-    mov ebx, 1            ; File descriptor 1 (stdout)
-    mov edx, buffer + 19  ; End of the buffer
-    sub edx, ecx          ; Calculate the length of the number string
-    mov ecx, ecx          ; Set ECX to the start of the number string
-    int 0x80
-
-    ; Print a newline
-    mov eax, 4            ; sys_write
-    mov ebx, 1            ; File descriptor 1 (stdout)
-    mov ecx, newline      ; Pointer to the newline character
-    mov edx, 1            ; Length of the newline character
-    int 0x80
-
+    pop eax
     leave
+    ret
+
+int_to_string:
+    ; Entrada: eax contém o número
+    ; Saída: ecx aponta para o início da string resultante (cresce de trás para frente)
+    ; Usamos a base 10 para conversão
+
+    xor edx, edx           ; Limpa o registrador edx
+    mov ebx, 10            ; Divisor (base 10)
+
+convert_loop:
+    xor edx, edx           ; Limpa edx
+    div ebx                ; Divide eax por 10, o quociente fica em eax, o resto em edx
+    add dl, '0'            ; Converte o dígito para ASCII
+    dec ecx                ; Decrementa o ponteiro da string
+    mov [ecx], dl          ; Armazena o dígito convertido
+    test eax, eax          ; Verifica se terminamos a divisão
+    jnz convert_loop       ; Se eax não for zero, continue convertendo
+
+    inc ecx                ; Ajustar o ponteiro de volta para o primeiro dígito
     ret

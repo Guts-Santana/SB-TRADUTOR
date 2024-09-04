@@ -19,6 +19,8 @@ private:
   std::vector<uint> variable;
   std::vector<int> jmp_address;
 
+  void AppendIOFunctions(std::ofstream &file);
+
 public:
   void ReadFile(std::string file);
 
@@ -35,6 +37,8 @@ public:
   std::vector<std::string> Write_LOADSTORE(int opc);
   std::vector<std::string> Write_COPY();
   std::vector<std::string> Write_STOP();
+  std::vector<std::string> Write_Output();
+  std::vector<std::string> Write_Input();
 
   std::vector<std::string> Write_Const();
   std::vector<std::string> Write_Variable();

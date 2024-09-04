@@ -1,8 +1,5 @@
 #include "file1.hpp"
 
-extern "C" void input_number(int *address);
-extern "C" void output_number(int number);
-
 void File::ReadFile(std::string filename)
 {
   stop = 0;
@@ -116,11 +113,12 @@ std::vector<std::string> File::Instructions()
     // stop = true;
     break;
   case INPUT:
-    input_number(&object[address + 1]);
+    command = Write_Input();
     break;
   case OUTPUT:
-    output_number(object[address + 1]);
+    command = Write_Output();
     break;
+
   default:
     break;
   }
@@ -156,7 +154,10 @@ void File::WriteFile()
     std::cerr << "Unable to open file for writing" << std::endl;
     return;
   }
-  file << "section .text" << '\n';
+  // file << "section .text" << '\n';
+
+  AppendIOFunctions(file);
+
   file << "	global _start" << '\n';
   file << "_start:" << '\n';
   while (!stop && (address < object.size()))
@@ -198,6 +199,8 @@ void File::WriteFile()
   {
     file << i;
   }
+
+  file.close();
 }
 
 std::vector<std::string> File::Write_ADDSUB(int opc)
@@ -371,6 +374,8 @@ std::vector<std::string> File::Write_Const()
 
   command.push_back("section .data");
   command.push_back("\n");
+  command.push_back("  buffer db 11 dup(0)   ; buffer para armazenar a string convertida (máximo de 11 caracteres, incluindo o '\\0')\n");
+  command.push_back("  input_buffer db 12 dup(0) ; buffer para entrada do usuário (máximo de 11 dígitos + newline)\n");
   while (i < constante.size())
   {
     addr = "a" + std::to_string(constante[i + 1]);
@@ -384,24 +389,67 @@ std::vector<std::string> File::Write_Const()
   return command;
 }
 
+std::vector<std::string> File::Write_Input()
+{
+  std::vector<std::string> command;
+  std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
+
+  // Generate assembly code for input
+  command.push_back("    push eax\n");
+  command.push_back("    call input_number\n");             // Call the input_number function
+  command.push_back("    mov [" + label_addr + "], eax\n"); // Store the input in the label's address
+  command.push_back("    pop eax\n");
+
+  return command;
+}
+
+std::vector<std::string> File::Write_Output()
+{
+  std::vector<std::string> command;
+  std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
+
+  // Generate assembly code for output
+  command.push_back("    push eax\n");
+  command.push_back("    mov eax, [" + label_addr + "]\n"); // Load the value from the label's address
+  command.push_back("    call output_number\n");            // Call the output_number function to print the value
+  command.push_back("    pop eax\n");
+
+  return command;
+}
+
 std::vector<std::string> File::Write_Variable()
 {
   int i = 0;
   std::vector<std::string> command;
   std::string addr;
 
-  command.push_back("section .bss");
-  command.push_back("\n");
+  command.push_back("section .bss\n");
   while (i < variable.size())
   {
     addr = "a" + std::to_string(variable[i]);
     command.push_back(addr);
-    command.push_back(" resd ");
-    command.push_back("1");
-    command.push_back("\n");
+    command.push_back(" resd 1\n"); // Reserve space for one 32-bit value
     i++;
   }
   return command;
+}
+
+void File::AppendIOFunctions(std::ofstream &file)
+{
+  std::ifstream io_file("io.asm");
+  if (!io_file.is_open())
+  {
+    std::cerr << "Unable to open io_functions.asm file" << std::endl;
+    return;
+  }
+
+  std::string line;
+  while (getline(io_file, line))
+  {
+    file << line << '\n';
+  }
+
+  io_file.close();
 }
 
 int main()
