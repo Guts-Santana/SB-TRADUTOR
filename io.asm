@@ -69,16 +69,20 @@ output_number:
     mov edx, buffer + 10        ; Load the end of the buffer into edx
     sub edx, ecx                ; Subtract the current pointer (ecx) from the end of the buffer
     int 0x80                            ; system call
+    push eax
 
-    ; Print the value in eax (number of bytes written)
-    call print_eax
-    
     ; Print a newline after the number
     mov eax, 4                          ; syscall for sys_write
     mov ebx, 1                          ; file descriptor (1 = stdout)
     lea ecx, [newline]                  ; point to the newline character
     mov edx, 1                          ; length = 1 byte
     int 0x80                            ; system call
+
+    pop eax
+    
+    ; Print the value in eax (number of bytes written)
+    call print_eax
+    
 
 
     pop eax
