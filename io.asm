@@ -3,7 +3,6 @@ section .text
 input_number:
     push ebp
     mov ebp, esp
-    sub esp, 4                  ; reservar espaço para uma variável local (opcional para manipulações intermediárias)
 
     ; Ler a entrada como string
     mov eax, 3                  ; syscall número para leitura (sys_read)
