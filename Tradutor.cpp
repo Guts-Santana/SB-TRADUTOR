@@ -19,6 +19,12 @@ void File::ReadFile(std::string filename)
   }
 
   std::string output_dir = "output/";
+
+  if (filename.size() > 9 && filename.substr(0, 9) == "arquivos/")
+  {
+    filename = filename.substr(9);
+  }
+
   output_filename = output_dir + filename.substr(0, filename.size() - 3) + "asm";
   // GetJumps();
 }
@@ -152,7 +158,7 @@ void File::WriteFile()
   address = 0;
   if (!file.is_open())
   {
-    std::cerr << "Unable to open file for writing" << std::endl;
+    std::cerr << "Unable to open file for writing: " << output_filename << std::endl;
     return;
   }
   // file << "section .text" << '\n';
@@ -375,11 +381,10 @@ std::vector<std::string> File::Write_Const()
 
   command.push_back("section .data");
   command.push_back("\n");
-  command.push_back("  buffer db 11 dup(0)   ; buffer para armazenar a string convertida (máximo de 11 caracteres, incluindo o '\\0')\n");
-  command.push_back("  input_buffer db 12 dup(0) ; buffer para entrada do usuário (máximo de 11 dígitos + newline)\n");
-  command.push_back("  msg_bytes_read db 'Bytes lidos ', 0\n");
-  command.push_back("  msg_bytes_written db 'Bytes escritos ', 0\n");
-  command.push_back("  msg_bytes db ' bytes', 0\n");
+  command.push_back("  buffer resb 20\n");
+  command.push_back("  input_buffer resb 12\n");
+  command.push_back("  msg_bytes_read db 'Bytes read: ', 0\n");
+  command.push_back("  msg_bytes_written db 'Bytes written: ', 0\n");
   command.push_back("  newline db 0xa, 0\n");
   while (i < constante.size())
   {
