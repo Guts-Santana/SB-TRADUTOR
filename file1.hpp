@@ -13,6 +13,7 @@ class File{
 		std::string output_filename;
 		bool stop;
 		int address;
+		uint32_t DataInit;
 
 		std::vector<int> constante;
 		std::vector<uint> variable;
@@ -24,6 +25,7 @@ class File{
 		void GetJumps();
 		void Get_Const();
 		void WriteFile();
+		void Get_Data();
 
 		std::vector<std::string> Instructions();
 
