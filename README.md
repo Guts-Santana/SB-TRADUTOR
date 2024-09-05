@@ -1,6 +1,11 @@
 # SB-TRADUTOR
 
-Tradutor para a linguagem de programação SB.
+Tradutor de código fonte do Assembly Inventado para Assembly IA-32. Projeto desenvolvido em C++ com operações de entrada e saída em Assembly IA-32.
+
+## Autores
+
+Gustavo Santana Lima - 211038235
+Yan Tavares - 202014323
 
 ## Uso
 
@@ -46,7 +51,39 @@ Para montar, ligar e executar o código gerado, basta executar o comando abaixo:
 
 ```bash
 nasm -f <arquivo>.asm -o <arquivo>.o
-ld -m elf_i386 -s -o <arquivo> <arquivo>.o
 ld -m elf_i386 -o <arquivo> <arquivo>.o
 ./<arquivo>
 ```
+
+## Estrutura do projeto
+
+```
+SB-TRADUTOR
+│ README.md
+│ Makefile
+│ Tradutor.cpp
+│ Tradutor.hpp
+│ io.asm
+│
+├── bin*
+│ │ tradutor
+│ │ arquivo1
+│
+├── output*
+│ │ arquivo1.asm
+│ │ arquivo1.o
+│
+├── Arquivos
+│ │ arquivo1.obj
+│ │ ...
+│
+```
+
+Diretórios marcados com `*` são gerados automaticamente pelo Makefile.
+
+## Contato
+
+Se você quiser entrar em contato, envie um e-mail para qualquer um dos autores:
+
+- [yantdo1@gmail.com](mailto:yantdo1@gmail.com)
+- [guts.santana@gmail.com](mailto:guts.santana@gmail.com)
