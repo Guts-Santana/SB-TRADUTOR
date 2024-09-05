@@ -1,191 +1,350 @@
-section .text
 
-input_number:
-    push ebp
-    mov ebp, esp
+string_to_int:
+    enter 0,0 ; create stack frame
+    mov esi, [ebp+12] ; get pointer to string
+    mov ecx, [ebp+8] ; get length of string
+    xor ebx,ebx    ; clear ebx
+.next_digit:
+    movzx eax,byte[esi]
+    inc esi
+    sub al,'0'    ; convert from ASCII to number
+    imul ebx,10
+    add ebx,eax   ; ebx = ebx*10 + eax
+    loop .next_digit  ; while (--ecx)
+    mov eax,ebx
+    leave ; remove stack frame
+    ret
 
-    ; Read input as string
-    mov eax, 3                          ; syscall for sys_read
-    mov ebx, 0                          ; file descriptor (0 = stdin)
-    lea ecx, [input_buffer]             ; buffer to store user input
-    mov edx, 12                         ; max number of bytes to read
-    int 0x80                            ; system call
-
-    push eax                            ; save the number of bytes read (eax)
-
-    ; Print "Bytes read: "
-    mov eax, 4                          ; syscall for sys_write
-    mov ebx, 1                          ; file descriptor (1 = stdout)
-    lea ecx, [msg_bytes_read]           ; address of the "Bytes read: " string
-    mov edx, 12                         ; length of the string
-    int 0x80                            ; system call
-
-    pop eax                             ; restore the number of bytes read (eax)
-
-    ; Print the value in eax (number of bytes read)
-    call print_read
-
-    ; Convert the string read into an integer
-    lea esi, [input_buffer]             ; point to the start of the input buffer
-    xor edi, edi                        ; clear edi (this will hold the final number)
-    xor ebx, ebx                        ; clear ebx (for digit processing)
-    mov ecx, 0                          ; flag for negative number
-
-    ; Check if the first character is a minus sign
-    mov al, [esi]
-    cmp al, '-'                         
-    jne check_first_digit               ; if not '-', skip to digit check
-    inc esi                             ; advance to the next character
-    mov ecx, 1                          ; mark the number as negative
-
-check_first_digit:
-    xor edi, edi                        ; clear edi for number accumulation
-convert_input_to_int:
-    mov bl, [esi]                       ; load the next character
-    cmp bl, 10                          ; check if it's a newline ('\n')
-    je input_done                       ; if newline, stop
-    sub bl, '0'                         ; convert character to numeric value
-    imul edi, edi, 10                   ; multiply current number in edi by 10
-    add edi, ebx                        ; add the numeric value of the digit
-    inc esi                             ; move to the next character
-    jmp convert_input_to_int
-
-input_done:
-    cmp ecx, 1                          ; check if the number is negative
-    je make_negative                    ; if negative, apply the sign
-    jmp end_input
-
-make_negative:
-    neg edi                             ; negate the value in edi
-
-end_input:
+modulo:
+    enter 0, 0
+    mov eax, [ebp+8]
+    test eax, 0xc0000000
+    je .positive
+    add eax, 2147483648 ; 2^31 -> because the max value of a signed 32-bit integer is 2147483647
+.positive:
     leave
     ret
 
-output_number:
-    push ebp
-    mov ebp, esp
+output:
+    enter 0,0
+    mov edi, buffer_number_read ; pega o endereco do buffer para preencher com 0
+    mov ecx, 10 ; length of buffer
+    mov al, 0 ; char to fill buffer with
+    rep stosb ; fill buffer with char
 
-    mov eax, [ebp + 8]
+    mov edi, [ebp+8] ; pega o endereco da variavel qualquer
+    mov esi, buffer_number_read ; pointer to buffer to store the string in to print
+    ; verificar se o valor é negativo
+    mov eax, [edi] ; eax = *edi
+    cmp eax, 0 ; to check if eax is negative
+    jge .positive_o ; if not negative, jump to .positive_o
+    ; se for negativo, converter para inteiro e multiplicar por -1
+    neg eax ; eax = -eax
+    ;  negative sign show '-' in the stdout
+    push eax ; store eax
+    push ebx ; store ebx
+    push ecx ; store ecx
+    push edx ; store edx
+    mov eax, 4; sys_write
+    mov ebx, 1; stdout
+    mov ecx, minus_str ; pointer to string
+    mov edx, 1 ; length of string
+    int 0x80; call kernel
+    pop edx ; restore
+    pop ecx ; restore
+    pop ebx ; restore
+    pop eax ; restore
+.positive_o:
+    ; converter a string para inteiro
+    push eax ; push eax as argument
+    push esi ; push pointer to buffer as argument
+    call int_to_string ; call int_to_string -> eax = pointer to string, ecx = length of string
+    pop esi ; restore pointer to string
+    pop ebx ; discard eax
 
-    ; Convert the number in eax to a string
-    ; push eax
-    mov ecx, buffer + 10                ; point to the end of the buffer
-    mov byte [ecx], 0                   ; null-terminate the string
-    call int_to_string                  ; convert number to string
+    ; mostrar a string
+    push eax ; store eax -> pointer to string
+    push ecx ; store ecx -> length of string
+    mov eax, 4; sys_write
+    mov ebx, 1; stdout
+    pop edx ; restore length of string
+    pop ecx ; restore pointer to string
+    int 0x80; call kernel
 
-    ; Print the number as string
-    mov eax, 4                          ; syscall for sys_write
-    mov ebx, 1                          ; file descriptor (1 = stdout)
-    lea ecx, [buffer]                   ; point to the buffer
-    ; Calculate the length of the string
-    mov edx, buffer + 10        ; Load the end of the buffer into edx
-    sub edx, ecx                ; Subtract the current pointer (ecx) from the end of the buffer
-    int 0x80                            ; system call
+    mov ecx, edx ; ecx = length of string
 
-    push eax
+    ; mostrar a quantidade de bytes lidos/escritos
+    push eax ; store eax
+    push ebx ; store ebx
+    push ecx ; store ecx
+    push edx ; store edx
+    push edi ; store edi
+    push esi ; store esi
+    push ecx ; push length of buffer
+    call show_output_msg ; call show_output_msg
+    pop ecx ; restore
+    pop esi ; restore
+    pop edi ; restore
+    pop edx ; restore
+    pop ecx ; restore
+    pop ebx ; restore
+    pop eax ; restore
 
-    ; Print a newline after the number
-    mov eax, 4                          ; syscall for sys_write
-    mov ebx, 1                          ; file descriptor (1 = stdout)
-    lea ecx, [newline]                  ; point to the newline character
-    mov edx, 1                          ; length = 1 byte
-    int 0x80                            ; system call
-
-    ; Print "Bytes written: "
-    mov eax, 4                          ; syscall for sys_write
-    mov ebx, 1                          ; file descriptor (1 = stdout)
-    lea ecx, [msg_bytes_written]           ; address of the "Bytes read: " string
-    mov edx, 15                         ; length of the string
-    int 0x80                            ; system call
-
-    pop eax
-    ; Print the value in eax (number of bytes written)
-    call print_written
-
-    pop eax
+    ; retornar a quantidade de bytes lidos/escritos em eax
+    mov eax, ecx ; return length of string
     leave
     ret
 
-print_read:
-    ; Convert the value in eax to a string and print it
-    ;push eax
-    mov ecx, buffer + 10                ; point to the end of the buffer
-    mov byte [ecx], 0                   ; null-terminate the string
-    call int_to_string                  ; convert number to string
+;  Input:
+;  ESI = pointer to the buffer to store the char in (must have room for at least 1 byte)
+;  Output:
+;  EAX = quantidade de bytes lidos/escritos (1)
+input:
+    enter 0,0
+    mov edi, buffer_number_read ; pega o endereco do buffer para preencher com 0
+    mov ecx, 10 ; length of buffer
+    mov al, 0 ; char to fill buffer with
+    rep stosb ; fill buffer with char
 
-    ; Print the string
-    mov eax, 4                          ; syscall for sys_write
-    mov ebx, 1                          ; file descriptor (1 = stdout)
-    lea ecx, [buffer]                   ; point to the buffer
-    ; Calculate the length of the string (buffer + 10 - ecx)
-    mov edx, buffer + 10         ; Load the end address of the buffer (after the number)
-    sub edx, ecx                 ; Subtract the current ECX (which points to the start of the string)
+    mov edi, [ebp+8] ; pega o endereco da variavel qualquer
+    mov esi, buffer_number_read ; pega o endereco do buffer
+    ; ler um valor decimal do stdin
+    mov eax, 3; sys_read
+    mov ebx, 0; stdin
+    mov ecx, esi ; pointer to buffer
+    mov edx, 10 ; length of buffer
+    int 0x80; call kernel
 
-    int 0x80                            ; system call
+    ; verificar se o valor é negativo
+    movzx eax, byte [esi] ; eax = *esi
+    cmp al, '-' ; check if char is '-'
+    jne .positive ; if not '-', jump to .positive
+    ; pegar o tamanho da string
+    push esi ; push pointer to string as argument
+    call len ; call len -> ecx = length of string
+    pop esi ; restore pointer to string
+    
+    dec ecx ; decrement ecx to ignore '\n'
+    push ecx ; push length of string including '-' but not '\n'
 
-    ; Print a newline after the number
-    mov eax, 4                          ; syscall for sys_write
-    mov ebx, 1                          ; file descriptor (1 = stdout)
-    lea ecx, [newline]                  ; point to the newline character
-    mov edx, 1                          ; length = 1 byte
-    int 0x80                            ; system call
+    ; se for negativo, desconsidera o sinal, converte para inteiro e multiplica por -1
+    inc esi ; increment esi to point to next char
+    dec ecx ; decrement ecx to ignore '-' (now it ignores '\n' and '-')
 
-    ;pop eax
+    ; converter a string para inteiro
+    push esi ; push pointer to string as argument
+    push ecx ; push length of string as argument
+    call string_to_int ; call string_to_int -> eax = integer value
+    pop ecx ; discard length of string
+    pop esi ; restore pointer to string
+
+    ; multiplicar por -1
+    neg eax ; eax = -eax
+
+    jmp .end ; jump to .end
+
+.positive:
+    ; pegar o tamanho da string
+    push esi ; push pointer to string as argument
+    call len ; call len -> ecx = length of string
+    pop esi ; restore pointer to string
+
+    dec ecx ; decrement ecx to ignore '\n'
+    push ecx ; push length of string    
+
+    ; converter a string para inteiro
+    push esi ; push pointer to string as argument
+    push ecx ; push length of string as argument
+    call string_to_int ; call string_to_int -> eax = integer value
+    pop ecx ; discard length of string
+    pop esi ; restore pointer to string
+
+.end:
+    ; armazenar o valor convertido em store_decimal
+    mov [edi], eax ; store eax in store_decimal
+    pop ecx ; discard length of string
+
+    ; mostrar a quantidade de bytes lidos/escritos
+    push eax ; store eax
+    push ebx ; store ebx
+    push ecx ; store ecx
+    push edx ; store edx
+    push edi ; store edi
+    push esi ; store esi
+    push ecx ; push length of buffer
+    call show_output_msg ; call show_output_msg 
+    pop ecx ; restore
+    pop esi ; restore
+    pop edi ; restore
+    pop edx ; restore
+    pop ecx ; restore
+    pop ebx ; restore
+    pop eax ; restore
+
+    ; retornar a quantidade de bytes lidos/escritos em eax
+    mov eax, ecx ; return length of string
+    leave
     ret
 
-print_written:
-    ; Convert the value in eax to a string and print it
-    ;push eax
-    mov ecx, buffer + 9                 ; point to the end of the buffer
-    mov byte [ecx], 0                   ; null-terminate the string
-    call int_to_string                  ; convert number to string
 
-    ; Print the string
-    mov eax, 4                          ; syscall for sys_write
-    mov ebx, 1                          ; file descriptor (1 = stdout)
-    lea ecx, [buffer]                   ; point to the buffer
-    ; Calculate the length of the string (buffer + 10 - ecx)
-    mov edx, buffer + 10         ; Load the end address of the buffer (after the number)
-    sub edx, ecx                 ; Subtract the current ECX (which points to the start of the string)
+output_c:
+    enter 0,0
+    mov esi, [ebp+8] ; pega o endereco do buffer
+    ; escrever o char no stdout
+    mov eax, 4; sys_write
+    mov ebx, 1; stdout
+    mov ecx, esi ; pointer to buffer
+    mov edx, 1 ; length of buffer
+    int 0x80; call kernel
+    ; calcular o tamanho da string
+    push ecx ; push pointer to string
+    push esi ; store esi
+    call len ; call len -> ecx = length of string
+    pop esi ; discard pointer to string
+    pop esi ; restore esi
 
-    int 0x80                            ; system call
+    ; mostrar a quantidade de bytes lidos/escritos
+    push eax ; store eax
+    push ebx ; store ebx
+    push ecx ; store ecx
+    push edx ; store edx
+    push edi ; store edi
+    push esi ; store esi
+    push ecx ; push length of buffer
+    call show_output_msg ; call show_output_msg
+    pop ecx ; restore
+    pop esi ; restore
+    pop edi ; restore
+    pop edx ; restore
+    pop ecx ; restore
+    pop ebx ; restore
+    pop eax ; restore
 
-    ; Print a newline after the number
-    mov eax, 4                          ; syscall for sys_write
-    mov ebx, 1                          ; file descriptor (1 = stdout)
-    lea ecx, [newline]                  ; point to the newline character
-    mov edx, 1                          ; length = 1 byte
-    int 0x80                            ; system call
-
-    ;pop eax
+    ; retornar a quantidade de bytes lidos/escritos em eax
+    mov eax, ecx ; return length of string
+    leave
     ret
 
+;  Input:
+;  ESI = pointer to the buffer to store the char in (must have room for at least 1 byte)
+;  Output:
+;  EAX = quantidade de bytes lidos/escritos (1)
+input_c:
+    enter 0,0
+    mov esi, [ebp+8] ; pega o endereco do buffer
+    ; ler um byte do stdin
+    mov eax, 3; sys_read
+    mov ebx, 0; stdin
+    mov ecx, esi ; pointer to buffer
+    mov edx, 1 ; length of buffer
+    int 0x80; call kernel
+    ; calcular o tamanho da string
+    push ecx ; push pointer to string
+    push esi ; store esi
+    call len ; call len -> ecx = length of string
+    pop esi ; discard pointer to string
+    pop esi ; restore esi
+
+    ; mostrar a quantidade de bytes lidos/escritos
+    push eax ; store eax
+    push ebx ; store ebx
+    push ecx ; store ecx
+    push edx ; store edx
+    push edi ; store edi
+    push esi ; store esi
+    push ecx ; push length of buffer
+    call show_output_msg ; call show_output_msg 
+    pop ecx ; restore
+    pop esi ; restore
+    pop edi ; restore
+    pop edx ; restore
+    pop ecx ; restore
+    pop ebx ; restore
+    pop eax ; restore
+
+    ; retornar a quantidade de bytes lidos/escritos em eax
+    mov eax, ecx ; return length of string
+    leave
+    ret
+
+
+; Input:
+; ESI = pointer to the string to get the length of
+; Output:
+; ECX = length of the string
+len:
+    enter 0,0 ; create stack frame
+    mov esi, [ebp+8] ; get pointer to string
+    mov ecx,0 ; initialize counter
+count:
+    inc ecx ; increment counter
+    inc esi ; increment esi to point to next char
+    cmp byte [esi],0 ; check if char is null
+    jnz count ; if not null, jump to count
+
+    ;dec ecx ; decrement counter to get lengthint_to_strin
+    leave ; remove stack frame
+    ret ; return to caller
+
+; Input:
+; first value in stack +12 = integer value to convert
+; second value in stack +8 = pointer to buffer to store the string in (must have room for at least 10 bytes)
+; Output:
+; eax = pointer to the first character of the generated string
+; ecx = length of the generated string 
 int_to_string:
-    ; Convert the number in eax to a string
-    xor edx, edx                        ; clear edx
-    mov ebx, 10                         ; divisor (base 10)
-    mov esi, eax                        ; store the original eax value in esi
+    enter 0,0 ; create stack frame
+    mov eax, [ebp+12] ; push eax
+    mov esi, [ebp+8] ; push esi
+    add esi,9        ; Point to the end of the buffer
+    mov byte [esi],0    ; String terminator
 
-    ; If the number is negative, handle the sign
-    test esi, esi                       ; check if the number is negative
-    jns convert_loop                    ; if positive, skip the next part
-    neg eax                             ; if negative, make it positive
+    mov ecx,0 ; initialize counter
+    mov ebx,10 ; set base to 10
+.next_digit:
+    inc ecx ; increment counter
+    xor edx,edx         ; Clear edx prior to dividing edx:eax by ebx
+    div ebx             ; eax /= 10
+    add dl,'0'          ; Convert the remainder to ASCII 
+    dec esi             ; store characters in reverse order
+    mov [esi],dl
+    test eax,eax            
+    jnz .next_digit     ; Repeat until eax==0
 
-convert_loop:
-    xor edx, edx                        ; clear edx for division
-    div ebx                             ; divide eax by 10, quotient in eax, remainder in edx
-    add dl, '0'                         ; convert remainder to ASCII
-    dec ecx                             ; move the pointer backward
-    mov [ecx], dl                       ; store the ASCII character
-    test eax, eax                       ; check if we're done
-    jnz convert_loop                    ; if not, keep looping
-
-    ; Add negative sign if necessary
-    test esi, esi                       ; check if the original number was negative
-    jns done                            ; if not, skip this part
-    dec ecx                             ; move the pointer backward
-    mov byte [ecx], '-'                 ; store the minus sign
-
-done:
+    ; return a pointer to the first digit (not necessarily the start of the provided buffer)
+    mov eax,esi
+    leave ; remove stack frame
     ret
+
+show_output_msg:
+    enter 0,0 ; create stack frame
+    mov edi, [ebp+8] ; get pointer to integer value to print
+    mov esi, buffer_number ; pointer to buffer to store the string in
+    ; show output message
+    mov eax, 4; sys_write
+    mov ebx, 1; stdout
+    mov ecx, output_msg ; pointer to string
+    mov edx, len_output_msg ; length of string
+    int 0x80; call kernel
+    ; converter o inteiro para string
+    push edi ; push integer value
+    push esi ; push pointer to buffer
+    call int_to_string ; call int_to_string -> eax = pointer to string, ecx = length of string
+    pop esi ; restore pointer to buffer
+    pop edi ; restore integer value
+    ; escrever a string no stdout
+    push eax ; push pointer to string
+    push ecx ; push length of string
+    mov eax, 4; sys_write
+    mov ebx, 1; stdout
+    pop edx ; pop length of string
+    pop ecx ; pop pointer to string
+    int 0x80; call kernel
+    ; show new line
+    mov eax, 4; sys_write
+    mov ebx, 1; stdout
+    mov ecx, new_line ; pointer to string
+    mov edx, 1 ; length of string
+    int 0x80; call kernel
+    leave ; remove stack frame
+    ret ; return to caller

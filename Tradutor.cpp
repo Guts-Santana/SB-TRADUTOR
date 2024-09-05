@@ -404,11 +404,11 @@ std::vector<std::string> File::Write_Input()
   std::vector<std::string> command;
   std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
 
-  // Generate assembly code for input
-  command.push_back("    push eax\n");
-  command.push_back("    call input_number\n");             // Call the input_number function
-  command.push_back("    mov [" + label_addr + "], edi\n"); // Store the input in the label's address
-  command.push_back("    pop eax\n");
+  command.push_back("  push EBX\n");                // Adiciona a linha PUSH ebx
+  command.push_back("  push " + label_addr + "\n"); // Adiciona a linha PUSH 1
+  command.push_back("  call input\n");              // Adiciona a linha CALL input
+  command.push_back("  pop ebx\n");                 // Adiciona a linha POP ebx
+  command.push_back("  pop ebx\n");                 // Adiciona a linha POP ebx
 
   return command;
 }
@@ -418,10 +418,11 @@ std::vector<std::string> File::Write_Output()
   std::vector<std::string> command;
   std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
 
-  // Generate assembly code for output
-  command.push_back("    mov eax, [" + label_addr + "]\n"); // Load the value from the label's address
-  command.push_back("    push eax\n");
-  command.push_back("    call output_number\n"); // Call the output_number function to print the value
+  command.push_back("  push EBX\n");                // Adiciona a linha PUSH ebx
+  command.push_back("  push " + label_addr + "\n"); // Adiciona a linha PUSH 1
+  command.push_back("  call output\n");             // Adiciona a linha CALL output
+  command.push_back("  pop ebx\n");                 // Adiciona a linha POP ebx
+  command.push_back("  pop ebx\n");                 // Adiciona a linha POP ebx
 
   return command;
 }
