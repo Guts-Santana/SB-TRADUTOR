@@ -440,7 +440,7 @@ std::vector<std::string> File::Write_Variable()
 
 void File::AppendIOFunctions(std::ofstream &file)
 {
-  std::ifstream io_file("io.asm");
+  std::ifstream io_file("io_stack.asm");
   if (!io_file.is_open())
   {
     std::cerr << "Unable to open io_functions.asm file" << std::endl;
