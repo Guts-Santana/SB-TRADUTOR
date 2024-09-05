@@ -11,7 +11,7 @@ input_number:
     mov edx, 12                         ; max number of bytes to read
     int 0x80                            ; system call
 
-    push eax
+    push eax                            ; save the number of bytes read (eax)
 
     ; Print "Bytes read: "
     mov eax, 4                          ; syscall for sys_write
@@ -20,15 +20,15 @@ input_number:
     mov edx, 12                         ; length of the string
     int 0x80                            ; system call
 
-    pop eax
+    pop eax                             ; restore the number of bytes read (eax)
 
     ; Print the value in eax (number of bytes read)
     call print_read
 
     ; Convert the string read into an integer
     lea esi, [input_buffer]             ; point to the start of the input buffer
-    xor eax, eax                        ; clear eax for number accumulation
-    xor ebx, ebx                        ; clear ebx (multiplier)
+    xor edi, edi                        ; clear edi (this will hold the final number)
+    xor ebx, ebx                        ; clear ebx (for digit processing)
     mov ecx, 0                          ; flag for negative number
 
     ; Check if the first character is a minus sign
@@ -39,14 +39,14 @@ input_number:
     mov ecx, 1                          ; mark the number as negative
 
 check_first_digit:
-    xor eax, eax                        ; clear eax for number accumulation
+    xor edi, edi                        ; clear edi for number accumulation
 convert_input_to_int:
     mov bl, [esi]                       ; load the next character
     cmp bl, 10                          ; check if it's a newline ('\n')
     je input_done                       ; if newline, stop
     sub bl, '0'                         ; convert character to numeric value
-    imul eax, eax, 10                   ; multiply current number by 10
-    add eax, ebx                        ; add the numeric value of the digit
+    imul edi, edi, 10                   ; multiply current number in edi by 10
+    add edi, ebx                        ; add the numeric value of the digit
     inc esi                             ; move to the next character
     jmp convert_input_to_int
 
@@ -56,7 +56,7 @@ input_done:
     jmp end_input
 
 make_negative:
-    neg eax                             ; negate the value in eax
+    neg edi                             ; negate the value in edi
 
 end_input:
     leave

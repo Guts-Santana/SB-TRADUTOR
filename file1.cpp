@@ -401,7 +401,7 @@ std::vector<std::string> File::Write_Input()
   // Generate assembly code for input
   command.push_back("    push eax\n");
   command.push_back("    call input_number\n");             // Call the input_number function
-  command.push_back("    mov [" + label_addr + "], eax\n"); // Store the input in the label's address
+  command.push_back("    mov [" + label_addr + "], edi\n"); // Store the input in the label's address
   command.push_back("    pop eax\n");
 
   return command;
@@ -440,7 +440,7 @@ std::vector<std::string> File::Write_Variable()
 
 void File::AppendIOFunctions(std::ofstream &file)
 {
-  std::ifstream io_file("io_stack.asm");
+  std::ifstream io_file("io.asm");
   if (!io_file.is_open())
   {
     std::cerr << "Unable to open io_functions.asm file" << std::endl;
