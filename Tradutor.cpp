@@ -1,4 +1,4 @@
-#include "file1.hpp"
+#include "Tradutor.hpp"
 
 void File::ReadFile(std::string filename)
 {
@@ -8,7 +8,7 @@ void File::ReadFile(std::string filename)
   std::ifstream file(filename);
   if (!file.is_open())
   {
-    throw std::invalid_argument("File not founded");
+    throw std::invalid_argument("File not found");
   }
   getline(file, line);
   std::istringstream iss(line);
@@ -18,7 +18,8 @@ void File::ReadFile(std::string filename)
     object.push_back(std::stoi(word));
   }
 
-  output_filename = filename.substr(0, filename.size() - 3) + "asm";
+  std::string output_dir = "output/";
+  output_filename = output_dir + filename.substr(0, filename.size() - 3) + "asm";
   // GetJumps();
 }
 
@@ -442,7 +443,7 @@ void File::AppendIOFunctions(std::ofstream &file)
   std::ifstream io_file("io.asm");
   if (!io_file.is_open())
   {
-    std::cerr << "Unable to open io_functions.asm file" << std::endl;
+    std::cerr << "Unable to open io.asm file" << std::endl;
     return;
   }
 
@@ -455,14 +456,23 @@ void File::AppendIOFunctions(std::ofstream &file)
   io_file.close();
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+  if (argc < 2)
+  {
+    std::cerr << "Usage: " << argv[0] << " <filename>" << std::endl;
+    return 1;
+  }
+
+  std::string filename = argv[1];
+
+  // Checks if .obj is already in the filename
+  if (filename.size() < 4 || filename.substr(filename.size() - 4) != ".obj")
+    filename += ".obj";
+
   File R;
-  R.ReadFile("in_out_var.obj");
+  R.ReadFile(filename);
   R.WriteFile();
 
   return 0;
 }
-
-// 	std::vector<std::string> File::Write_Input(){}
-//	std::vector<std::string> File::Write_Output(){}
