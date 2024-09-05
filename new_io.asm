@@ -7,13 +7,13 @@ global _start, input, string_to_int, len, show_output_msg, output
 ; Output: Integer in EAX
 input:
     enter 0, 0
-    mov edi, buffer_number_read   ; Clear buffer
+    mov edi, input_buffer   ; Clear buffer
     mov ecx, 12
     mov al, 0
     rep stosb                     ; Fill buffer with 0's
 
     mov edi, [ebp + 8]            ; Get the destination pointer
-    mov esi, buffer_number_read   ; Buffer to store input
+    mov esi, input_buffer   ; Buffer to store input
 
     ; Read input from stdin
     mov eax, 3                    ; sys_read
@@ -134,7 +134,7 @@ count:
 show_output_msg:
     enter 0, 0
     mov edi, [ebp + 8]            ; Get the integer to print
-    mov esi, buffer_number        ; Buffer to store the converted string
+    mov esi, buffer               ; Buffer to store the converted string
 
     ; Print the output message
     mov eax, 4                    ; sys_write
@@ -162,7 +162,7 @@ show_output_msg:
     ; Print a new line
     mov eax, 4                    ; sys_write
     mov ebx, 1                    ; stdout
-    mov ecx, new_line             ; Newline character
+    mov ecx, newline             ; Newline character
     mov edx, 1                    ; Length of newline
     int 0x80
     leave
@@ -198,13 +198,13 @@ int_to_string:
 output:
     enter 0, 0
     ; Clear the buffer
-    mov edi, buffer_number_read
+    mov edi, input_buffer
     mov ecx, 12
     mov al, 0
     rep stosb                   ; Fill buffer with 0's
 
     mov edi, [ebp + 8]          ; Get the pointer to the integer value
-    mov esi, buffer_number_read ; Buffer to store the string representation
+    mov esi, input_buffer ; Buffer to store the string representation
     mov eax, [edi]              ; Load integer into EAX for checking
 
     ; Check if the number is negative
@@ -247,6 +247,23 @@ output:
     int 0x80
 
     mov ecx, edx                ; Store string length in ECX
+    
+    push eax
+    push ebx
+    push ecx
+    push edx
+
+    ; Print a new line
+    mov eax, 4                    ; sys_write
+    mov ebx, 1                    ; stdout
+    mov ecx, newline             ; Newline character
+    mov edx, 1                    ; Length of newline
+    int 0x80
+
+    pop edx
+    pop ecx                     ; Restore registers
+    pop ebx
+    pop eax
 
     ; Call show_output_msg to display output
     push eax                    ; Preserve registers

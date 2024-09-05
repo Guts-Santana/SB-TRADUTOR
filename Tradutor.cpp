@@ -224,7 +224,7 @@ std::vector<std::string> File::Write_ADDSUB(int opc)
   }
 
   addr = "a" + std::to_string(object[address + 1]);
-  command.push_back("eax, ");
+  command.push_back("ebx, ");
   command.push_back("[");
   command.push_back(addr);
   command.push_back("]");
@@ -242,7 +242,7 @@ std::vector<std::string> File::Write_LOADSTORE(int opc)
   addr = "a" + std::to_string(object[address + 1]);
   if (opc == LOAD)
   {
-    command.push_back("eax, ");
+    command.push_back("ebx, ");
     command.push_back("[");
     command.push_back(addr);
     command.push_back("]");
@@ -253,7 +253,7 @@ std::vector<std::string> File::Write_LOADSTORE(int opc)
     command.push_back("[");
     command.push_back(addr);
     command.push_back("], ");
-    command.push_back("eax");
+    command.push_back("ebx");
     command.push_back("\n");
   }
   return command;
@@ -264,11 +264,11 @@ std::vector<std::string> File::Write_COPY() // precisa de um push
   std::string addr;
   std::vector<std::string> command;
 
-  command.push_back("	push eax");
+  command.push_back("	push ebx");
   command.push_back("\n");
 
   addr = "a" + std::to_string(object[address + 1]);
-  command.push_back("	mov eax, [");
+  command.push_back("	mov ebx, [");
   command.push_back(addr);
   command.push_back("]");
   command.push_back("\n");
@@ -277,10 +277,10 @@ std::vector<std::string> File::Write_COPY() // precisa de um push
   command.push_back("	mov [");
   command.push_back(addr);
   command.push_back("], ");
-  command.push_back("eax");
+  command.push_back("ebx");
   command.push_back("\n");
 
-  command.push_back("	pop eax");
+  command.push_back("	pop ebx");
   command.push_back("\n");
 
   return command;
@@ -305,7 +305,7 @@ std::vector<std::string> File::Write_JMP()
 {
   std::vector<std::string> command;
   std::string addr;
-  command.push_back("	cmp eax, 0");
+  command.push_back("	cmp ebx, 0");
   command.push_back("\n");
   switch (object[address])
   {
@@ -337,7 +337,7 @@ std::vector<std::string> File::Write_MUL()
 {
   std::vector<std::string> command;
   std::string addr;
-  command.push_back("	imul eax, [");
+  command.push_back("	imul ebx, [");
 
   addr = "a" + std::to_string(object[address + 1]);
   command.push_back(addr);
@@ -381,11 +381,10 @@ std::vector<std::string> File::Write_Const()
 
   command.push_back("section .data");
   command.push_back("\n");
-  command.push_back("  buffer resb 20\n");
-  command.push_back("  input_buffer resb 12\n");
-  command.push_back("  msg_bytes_read db 'Bytes read: ', 0\n");
-  command.push_back("  msg_bytes_written db 'Bytes written: ', 0\n");
+  command.push_back("  output_msg db 0, 'Quantidade de Bytes lidos/escritos = ', 0\n");
+  command.push_back("  len_output_msg equ $-output_msg\n");
   command.push_back("  newline db 0xa, 0\n");
+  command.push_back("  minus_str db '-', 0\n");
   while (i < constante.size())
   {
     addr = "a" + std::to_string(constante[i + 1]);
@@ -405,10 +404,11 @@ std::vector<std::string> File::Write_Input()
   std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
 
   // Generate assembly code for input
-  command.push_back("    push eax\n");
-  command.push_back("    call input_number\n");             // Call the input_number function
-  command.push_back("    mov [" + label_addr + "], edi\n"); // Store the input in the label's address
-  command.push_back("    pop eax\n");
+  command.push_back("    push ebx\n");
+  command.push_back("    push " + label_addr + "\n");
+  command.push_back("    call input\n"); // Call the input_number function
+  command.push_back("    pop ebx\n");    // Store the input in the label's address
+  command.push_back("    pop ebx\n");
 
   return command;
 }
@@ -419,9 +419,11 @@ std::vector<std::string> File::Write_Output()
   std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
 
   // Generate assembly code for output
-  command.push_back("    mov eax, [" + label_addr + "]\n"); // Load the value from the label's address
-  command.push_back("    push eax\n");
-  command.push_back("    call output_number\n"); // Call the output_number function to print the value
+  command.push_back("    push ebx\n");
+  command.push_back("    push " + label_addr + "\n"); // Load the value from the label's address
+  command.push_back("    call output\n");
+  command.push_back("    pop ebx\n");
+  command.push_back("    pop ebx\n");
 
   return command;
 }
@@ -433,6 +435,8 @@ std::vector<std::string> File::Write_Variable()
   std::string addr;
 
   command.push_back("section .bss\n");
+  command.push_back("  buffer resb 11\n");
+  command.push_back("  input_buffer resb 12\n");
   while (i < variable.size())
   {
     addr = "a" + std::to_string(variable[i]);
@@ -445,7 +449,7 @@ std::vector<std::string> File::Write_Variable()
 
 void File::AppendIOFunctions(std::ofstream &file)
 {
-  std::ifstream io_file("io.asm");
+  std::ifstream io_file("new_io.asm");
   if (!io_file.is_open())
   {
     std::cerr << "Unable to open io.asm file" << std::endl;
