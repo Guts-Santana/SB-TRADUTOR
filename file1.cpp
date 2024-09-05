@@ -413,10 +413,9 @@ std::vector<std::string> File::Write_Output()
   std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
 
   // Generate assembly code for output
-  command.push_back("    push eax\n");
   command.push_back("    mov eax, [" + label_addr + "]\n"); // Load the value from the label's address
-  command.push_back("    call output_number\n");            // Call the output_number function to print the value
-  command.push_back("    pop eax\n");
+  command.push_back("    push eax\n");
+  command.push_back("    call output_number\n"); // Call the output_number function to print the value
 
   return command;
 }

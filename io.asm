@@ -66,8 +66,10 @@ output_number:
     push ebp
     mov ebp, esp
 
+    mov eax, [ebp + 8]
+
     ; Convert the number in eax to a string
-    push eax
+    ; push eax
     mov ecx, buffer + 10                ; point to the end of the buffer
     mov byte [ecx], 0                   ; null-terminate the string
     call int_to_string                  ; convert number to string
@@ -107,7 +109,7 @@ output_number:
 
 print_read:
     ; Convert the value in eax to a string and print it
-    push eax
+    ;push eax
     mov ecx, buffer + 10                ; point to the end of the buffer
     mov byte [ecx], 0                   ; null-terminate the string
     call int_to_string                  ; convert number to string
@@ -129,12 +131,12 @@ print_read:
     mov edx, 1                          ; length = 1 byte
     int 0x80                            ; system call
 
-    pop eax
+    ;pop eax
     ret
 
 print_written:
     ; Convert the value in eax to a string and print it
-    push eax
+    ;push eax
     mov ecx, buffer + 9                 ; point to the end of the buffer
     mov byte [ecx], 0                   ; null-terminate the string
     call int_to_string                  ; convert number to string
@@ -156,7 +158,7 @@ print_written:
     mov edx, 1                          ; length = 1 byte
     int 0x80                            ; system call
 
-    pop eax
+    ;pop eax
     ret
 
 int_to_string:
