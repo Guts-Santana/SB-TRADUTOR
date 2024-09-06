@@ -25,6 +25,8 @@ void File::ReadFile(std::string filename)
     filename = filename.substr(9);
   }
 
+  Get_Data();
+
   output_filename = output_dir + filename.substr(0, filename.size() - 3) + "asm";
   // GetJumps();
 }
@@ -32,15 +34,11 @@ void File::ReadFile(std::string filename)
 void File::GetJumps()
 {
   int size = 0;
-  while (object[size] != STOP)
+  while (size < DataInit)
   {
     bool neww = true;
-    if (object[size] == COPY)
-    {
-      size++;
-    }
 
-    else if (object[size] <= JMPZ && object[size] >= JMP)
+    if (object[size] <= JMPZ && object[size] >= JMP)
     {
       for (int i = 0; i < jmp_address.size(); i++)
       {
@@ -54,6 +52,14 @@ void File::GetJumps()
       {
         jmp_address.push_back(object[size + 1]);
       }
+    }
+    else if (object[size] == COPY)
+    {
+      size++;
+    }
+    else if (object[size] == STOP)
+    {
+      size--;
     }
     size = size + 2;
   }
@@ -115,17 +121,15 @@ std::vector<std::string> File::Instructions()
   case STORE:
     command = Write_LOADSTORE(object[address]);
     break;
-  case STOP:
-    command = Write_STOP();
-    // stop = true;
-    break;
   case INPUT:
     command = Write_Input();
     break;
   case OUTPUT:
     command = Write_Output();
     break;
-
+  case STOP:
+    command = Write_STOP();
+    break;
   default:
     break;
   }
@@ -134,19 +138,19 @@ std::vector<std::string> File::Instructions()
 
 void File::Get_Const()
 {
-  while (address < object.size())
+  while (DataInit < object.size())
   {
-    if (object[address] == 0)
+    if (object[DataInit] == 0)
     {
-      variable.push_back(address);
+      variable.push_back(DataInit);
     }
     else
     {
 
-      constante.push_back(object[address]);
-      constante.push_back(address);
+      constante.push_back(object[DataInit]);
+      constante.push_back(DataInit);
     }
-    address++;
+    DataInit++;
   }
 }
 
@@ -343,6 +347,8 @@ std::vector<std::string> File::Write_MUL()
   command.push_back(addr);
   command.push_back("]");
   command.push_back("\n");
+  command.push_back("jo OVERFLOW");
+  command.push_back("\n");
 
   return command;
 }
@@ -463,6 +469,48 @@ void File::AppendIOFunctions(std::ofstream &file)
   }
 
   io_file.close();
+}
+
+void File::Get_Data()
+{
+  int size = 0;
+  DataInit = 0xffffffff;
+  while (size < DataInit)
+  {
+    bool neww = true;
+
+    if ((object[size] < JMP || object[size] > JMPZ) && object[size] != STOP)
+    {
+      if (object[size + 1] < DataInit)
+        DataInit = object[size + 1];
+      if (object[size] == COPY)
+      {
+        if (object[size + 2] < DataInit)
+          DataInit = object[size + 2];
+        size++;
+      }
+    }
+    // std::cout << DataInit << ' ' << std::flush;
+    else if (object[size] == STOP)
+      size--;
+
+    else if (object[size] <= JMPZ && object[size] >= JMP)
+    {
+      for (int i = 0; i < jmp_address.size(); i++)
+      {
+        if (object[size + 1] == jmp_address[i])
+        {
+          neww = false;
+          break;
+        }
+      }
+      if (neww)
+      {
+        jmp_address.push_back(object[size + 1]);
+      }
+    }
+    size = size + 2;
+  }
 }
 
 int main(int argc, char *argv[])

@@ -128,7 +128,7 @@ std::vector<std::string> File::Instructions()
 
 void File::Get_Const()
 {
-	while (DataInit < object.size())
+	while (!stop && (address < object.size()))
 	{
 		if (object[DataInit] == 0)
 		{

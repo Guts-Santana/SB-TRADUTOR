@@ -1,5 +1,13 @@
 section .text
-global _start, input, string_to_int, len, show_output_msg, output
+global _start, input, string_to_int, len, show_output_msg, output, OVERFLOW
+
+
+; TEMPORARY!!!
+OVERFLOW:
+
+    mov eax, 1
+    mov ebx, 0
+    int 0x80
 
 ; -----------------------------------------------
 ; Input: Read a decimal value from stdin and convert it to an integer
