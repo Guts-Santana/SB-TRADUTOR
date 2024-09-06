@@ -1,10 +1,11 @@
-#include <algorithm>
-#include <cctype>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
+#include <sstream>
+#include <fstream>
+#include <cctype>
+#include <algorithm>
+#include <cstdint>
 
 class File
 {
@@ -14,6 +15,7 @@ private:
   std::string output_filename;
   bool stop;
   int address;
+  uint32_t DataInit;
 
   std::vector<int> constante;
   std::vector<uint> variable;
@@ -27,6 +29,7 @@ public:
   void GetJumps();
   void Get_Const();
   void WriteFile();
+  void Get_Data();
 
   std::vector<std::string> Instructions();
 
