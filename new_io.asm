@@ -1,8 +1,6 @@
 section .text
 global _start, input, string_to_int, len, output_read, output_written, output, OVERFLOW
 
-
-; TEMPORARY!!!
 OVERFLOW:
 	mov eax, 4                    
     mov ebx, 1                    
