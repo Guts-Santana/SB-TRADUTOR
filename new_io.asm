@@ -1,7 +1,7 @@
 section .text
-global _start, input, convert_input_to_int, len, output_read, output_written, output, OVERFLOW, s_input, s_output
+global _start, input, convert_input_to_int, len, output_read, output_written, output, overflow, s_input, s_output
 
-OVERFLOW:
+overflow:
 	mov eax, 4                    
     mov ebx, 1                    
     mov ecx, output_overflow                     
@@ -117,7 +117,7 @@ output_read:
     mov esi, buffer               ; Buffer to store the converted string
 
     cmp edi, 11
-    jg OVERFLOW
+    jg overflow
 
     ; Print the output message
     mov eax, 4                    ; sys_write
