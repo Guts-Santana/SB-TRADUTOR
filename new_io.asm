@@ -116,6 +116,9 @@ output_read:
     mov edi, [ebp + 8]            ; Get the integer to print
     mov esi, buffer               ; Buffer to store the converted string
 
+    cmp edi, 11
+    jg OVERFLOW
+
     ; Print the output message
     mov eax, 4                    ; sys_write
     mov ebx, 1                    ; stdout
