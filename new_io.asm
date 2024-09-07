@@ -78,9 +78,9 @@ input:
 
 .end_input:
     mov [edi], eax                ; Store the result in the destination pointer
-    pop ecx 
     
-    mov eax, ecx 
+    pop ecx 
+    mov eax, ecx                  ; Return the number of bytes read in eax
     leave
     ret
 
