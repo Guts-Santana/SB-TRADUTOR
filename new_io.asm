@@ -302,6 +302,13 @@ output:
 
     popa
 
+    ; Call show_output_msg to display output
+    pusha
+    push ecx                    ; Push length of string
+    call output_written         ; Call show_output_msg
+    pop ecx                     ; Restore length of string
+    popa
+
     ; Return the length of the string in EAX
     mov eax, ecx
     leave
