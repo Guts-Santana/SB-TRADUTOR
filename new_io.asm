@@ -1,5 +1,5 @@
 section .text
-global _start, input, convert_input_to_int, len, output_read, output_written, output, overflow, s_input, s_output
+global _start, input, output, overflow, s_input, s_output
 
 overflow:
 	mov eax, 4                    
@@ -8,10 +8,10 @@ overflow:
     mov edx, len_overflow
     int 0x80
 
-	mov eax, 4                    ; sys_write
-    mov ebx, 1                    ; stdout
+	mov eax, 4                   ; sys_write
+    mov ebx, 1                   ; stdout
     mov ecx, newline             ; Newline character
-    mov edx, 1                    ; Length of newline
+    mov edx, 1                   ; Length of newline
     int 0x80
 
     mov eax, 1
@@ -21,7 +21,7 @@ overflow:
 ; -----------------------------------------------
 ; Input: Read a decimal value from stdin and convert it to an integer
 ; Input: EBP+8 - Pointer to variable to store the result
-; Output: Integer in EAX
+; Output: Integer in EAX - Bytes read
 input:
     enter 0, 0
     mov edi, [ebp + 8]            ; Get the destination pointer
@@ -58,12 +58,12 @@ input:
 
     push esi                      ; Push pointer to string (after '-')
     push ecx                      ; Push length of the string
-    call convert_input_to_int             ; Convert string to integer
+    call convert_input_to_int     ; Convert string to integer
     pop ecx
     pop esi
 
     neg eax                       ; Negate the result for negative numbers
-    jmp .end                      ; Jump to the end
+    jmp .end_input                      ; Jump to the end
 
 .positive:
     ; Handle positive input
@@ -72,11 +72,11 @@ input:
 
     push esi                      ; Push pointer to string
     push ecx                      ; Push length of the string
-    call convert_input_to_int             ; Convert string to integer
+    call convert_input_to_int     ; Convert string to integer
     pop ecx
     pop esi
 
-.end:
+.end_input:
     mov [edi], eax                ; Store the result in the destination pointer
     pop ecx 
     
@@ -102,7 +102,7 @@ convert_input_to_int:
     sub al, '0'                   ; Convert ASCII to integer
     imul ebx, 10                  ; Multiply previous result by 10
     add ebx, eax                  ; Add the current digit
-    loop .string_to_int              ; Repeat for all characters
+    loop .string_to_int           ; Repeat for all characters
 
     mov eax, ebx                  ; Move result to EAX
     leave
@@ -129,7 +129,7 @@ output_read:
     ; Convert the integer to string
     push edi                      ; Push integer value
     push esi                      ; Push pointer to buffer
-    call int_to_string             ; Convert integer to string
+    call int_to_string            ; Convert integer to string
     pop esi                       ; Restore buffer pointer
     pop edi                       ; Restore integer value
 
@@ -145,7 +145,7 @@ output_read:
     ; Print a new line
     mov eax, 4                    ; sys_write
     mov ebx, 1                    ; stdout
-    mov ecx, newline             ; Newline character
+    mov ecx, newline              ; Newline character
     mov edx, 1                    ; Length of newline
     int 0x80
     leave
@@ -192,51 +192,57 @@ output_written:
     ret
 
 
+; -----------------------------------------------
+; Convert an integer to a string
+; Input: EBP+8 - Pointer to the buffer to store the string
+;        EBP+12 - Integer to convert
+; Output: Pointer to the beginning of the string in EAX
 int_to_string:
-    enter 0,0 ;
-    mov eax, [ebp+12] 
-    mov esi, [ebp+8] 
-    add esi,9        
-    mov byte [esi],0    
-
-    mov ecx,0 
-    mov ebx,10 
-.next_digit:
-    inc ecx 
-    xor edx,edx         
-    div ebx             
-    add dl,'0'          
-    dec esi             
-    mov [esi],dl
-    test eax,eax            
-    jnz .next_digit     
-
+    enter 0, 0                 ; Set up the stack frame
     
-    mov eax,esi
-    leave 
-    ret
+    mov eax, [ebp + 12]        ; Load the integer to convert (from EBP+12) into EAX
+    mov esi, [ebp + 8]         ; Load the destination buffer address (from EBP+8) into ESI
+    add esi, 9                 ; Move to the end of the buffer (assuming max 9 digits)
+    mov byte [esi], 0          ; Null-terminate the string (set last byte to 0)
+    
+    mov ecx, 0                 ; ECX will count the digits
+    mov ebx, 10                ; Set divisor to 10 (for base-10 division)
+    
+.next_digit:
+    inc ecx                    ; Increment the digit counter
+    xor edx, edx               ; Clear EDX (high part of EAX) before division
+    div ebx                    ; Divide EAX by 10, result in EAX, remainder in EDX
+    add dl, '0'                ; Convert the remainder (DL) to ASCII by adding '0'
+    dec esi                    ; Move back in the buffer
+    mov [esi], dl              ; Store the ASCII digit in the buffer
+    test eax, eax              ; Check if EAX (quotient) is zero
+    jnz .next_digit            ; If not zero, continue with the next digit
+
+    mov eax, esi               ; Return the pointer to the beginning of the string (ESI)
+    leave                      ; Restore the stack frame
+    ret                        ; Return to the caller
 
 ; --------------------------------------------------
 ; Output: Print an integer to stdout
 ; Input: EBP+8 - Pointer to the integer to print
 output:
     enter 0, 0
-    sub esp, 4 ; Reserve space for the negative flag
+    sub esp, 4                 ; Reserve space for the negative flag
     mov byte [esp], 0          ; Clear the negative flag
     ; Clear the buffer
     mov edi, input_buffer
 
     mov edi, [ebp + 8]          ; Get the pointer to the integer value
-    mov esi, input_buffer ; Buffer to store the string representation
+    mov esi, input_buffer       ; Buffer to store the string representation
     mov eax, [edi]              ; Load integer into EAX for checking
 
     ; Check if the number is negative
     cmp eax, 0
-    jge .positive_output             ; If non-negative, jump to positive case
+    jge .positive_output        ; If non-negative, jump to positive case
 
     ; Handle negative numbers
     neg eax                     ; Negate the number
-    mov byte [esp], 1          ; Set the negative flag
+    mov byte [esp], 1           ; Set the negative flag
 
 .positive_output:
     ; Convert the integer to a string
@@ -246,14 +252,14 @@ output:
     pop esi                     ; Restore buffer pointer
     pop ebx                     ; Discard preserved value
 
-    cmp byte [esp], 1        ; Check if the number was negative
-    jne .done                    ; If not negative, jump to done
+    cmp byte [esp], 1           ; Check if the number was negative
+    jne .end_output             ; If not negative, jump to done
 
     dec eax
     mov byte [eax], '-'
     inc ecx
 
-.done:
+.end_output:
     push eax                    ; Pointer to string
     push ecx                    ; Length of the string
     mov eax, 4                  ; sys_write
@@ -348,8 +354,4 @@ s_input:
     mov eax, ecx
 
     leave
-    ret
-
-
-tst:
     ret
