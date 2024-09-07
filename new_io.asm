@@ -82,22 +82,11 @@ input:
     mov [edi], eax 
     pop ecx 
 
-    
-    push eax 
-    push ebx 
-    push ecx 
-    push edx 
-    push edi 
-    push esi 
+    pusha
     push ecx 
     call output_read 
     pop ecx 
-    pop esi 
-    pop edi 
-    pop edx 
-    pop ecx 
-    pop ebx 
-    pop eax 
+    popa
 
     
     mov eax, ecx 
@@ -274,9 +263,7 @@ output:
     neg eax                     ; Negate the number
 
     ; Output the negative sign
-    push eax                    ; Preserve the negated value
-    push ebx
-    push ecx
+    pusha
     push edx
     mov eax, 4                  ; sys_write
     mov ebx, 1                  ; stdout
@@ -284,9 +271,7 @@ output:
     mov edx, 1                  ; Length = 1
     int 0x80
     pop edx                     ; Restore registers
-    pop ecx
-    pop ebx
-    pop eax                     ; Restore the negated value
+    popa
 
 .positive_o:
     ; Convert the integer to a string
@@ -307,10 +292,8 @@ output:
 
     mov ecx, edx                ; Store string length in ECX
     
-    push eax
-    push ebx
-    push ecx
-    push edx
+
+    pusha
 
     ; Print a new line
     mov eax, 4                    ; sys_write
@@ -319,27 +302,14 @@ output:
     mov edx, 1                    ; Length of newline
     int 0x80
 
-    pop edx
-    pop ecx                     ; Restore registers
-    pop ebx
-    pop eax
+    popa
 
     ; Call show_output_msg to display output
-    push eax                    ; Preserve registers
-    push ebx
-    push ecx
-    push edx
-    push edi
-    push esi
+    pusha
     push ecx                    ; Push length of string
     call output_written         ; Call show_output_msg
-    pop ecx                     ; Restore registers
-    pop esi
-    pop edi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
+    pop ecx                     ; Restore length of string
+    popa
 
     ; Return the length of the string in EAX
     mov eax, ecx
