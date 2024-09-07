@@ -24,10 +24,6 @@ OVERFLOW:
 ; Output: Integer in EAX
 input:
     enter 0, 0
-    mov edi, input_buffer 
-    mov ecx, 12 ; Buffer size
-    mov al, 0
-
     mov edi, [ebp + 8]            ; Get the destination pointer
     mov esi, input_buffer   ; Buffer to store input
 
@@ -246,8 +242,7 @@ output:
     enter 0, 0
     ; Clear the buffer
     mov edi, input_buffer
-    mov ecx, 12
-    mov al, 0
+   
 
     mov edi, [ebp + 8]          ; Get the pointer to the integer value
     mov esi, input_buffer ; Buffer to store the string representation
