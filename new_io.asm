@@ -113,24 +113,6 @@ string_to_int:
     ret
 
 ; -----------------------------------------------
-; Get the length of a string
-; Input: EBP+8 - Pointer to the string
-; Output: Length in ECX
-len:
-    enter 0, 0
-    mov esi, [ebp + 8]            ; Get pointer to the string
-    xor ecx, ecx                  ; Initialize length counter
-
-count:
-    inc ecx                       ; Increment length
-    inc esi                       ; Move to next character
-    cmp byte [esi], 0             ; Check if character is null
-    jnz count                     ; Repeat until null terminator is found
-
-    leave
-    ret
-
-; -----------------------------------------------
 ; Show output message and print integer result
 ; Input: EBP+8 - Pointer to the integer value to print
 output_read:
@@ -240,9 +222,10 @@ int_to_string:
 ; Input: EBP+8 - Pointer to the integer to print
 output:
     enter 0, 0
+    sub esp, 4 ; Reserve space for the negative flag
+    mov byte [esp], 0          ; Clear the negative flag
     ; Clear the buffer
     mov edi, input_buffer
-   
 
     mov edi, [ebp + 8]          ; Get the pointer to the integer value
     mov esi, input_buffer ; Buffer to store the string representation
@@ -254,27 +237,24 @@ output:
 
     ; Handle negative numbers
     neg eax                     ; Negate the number
-
-    ; Output the negative sign
-    pusha
-    push edx
-    mov eax, 4                  ; sys_write
-    mov ebx, 1                  ; stdout
-    mov ecx, minus_str          ; Write the minus sign '-'
-    mov edx, 1                  ; Length = 1
-    int 0x80
-    pop edx                     ; Restore registers
-    popa
+    mov byte [esp], 1          ; Set the negative flag
 
 .positive_output:
     ; Convert the integer to a string
     push eax                    ; Preserve integer value
     push esi                    ; Push buffer pointer
-    call int_to_string           ; Convert integer to string
+    call int_to_string          ; Convert integer to string
     pop esi                     ; Restore buffer pointer
     pop ebx                     ; Discard preserved value
 
-    ; Output the converted string
+    cmp byte [esp], 1        ; Check if the number was negative
+    jne .done                    ; If not negative, jump to done
+
+    dec eax
+    mov byte [eax], '-'
+    inc ecx
+
+.done:
     push eax                    ; Pointer to string
     push ecx                    ; Length of the string
     mov eax, 4                  ; sys_write
@@ -284,7 +264,6 @@ output:
     int 0x80
 
     mov ecx, edx                ; Store string length in ECX
-    
 
     pusha
 
@@ -309,4 +288,4 @@ output:
     leave
     ret
 
-	
+    
