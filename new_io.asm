@@ -257,7 +257,7 @@ output:
 
     ; Check if the number is negative
     cmp eax, 0
-    jge .positive_o             ; If non-negative, jump to positive case
+    jge .positive_output             ; If non-negative, jump to positive case
 
     ; Handle negative numbers
     neg eax                     ; Negate the number
@@ -273,7 +273,7 @@ output:
     pop edx                     ; Restore registers
     popa
 
-.positive_o:
+.positive_output:
     ; Convert the integer to a string
     push eax                    ; Preserve integer value
     push esi                    ; Push buffer pointer
