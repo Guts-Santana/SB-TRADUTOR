@@ -422,6 +422,7 @@ std::vector<std::string> File::Write_Input()
   command.push_back("    push " + label_addr + "\n");
   command.push_back("    call input\n"); // Call the input_number function
   command.push_back("    pop ebx\n");    // Store the input in the label's address
+  command.push_back("    pop ebx\n");
 
   return command;
 }
@@ -435,6 +436,7 @@ std::vector<std::string> File::Write_Output()
   command.push_back("    push ebx\n");
   command.push_back("    push " + label_addr + "\n"); // Load the value from the label's address
   command.push_back("    call output\n");
+  command.push_back("    pop ebx\n");
   command.push_back("    pop ebx\n");
 
   return command;
