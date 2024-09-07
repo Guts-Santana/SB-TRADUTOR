@@ -27,7 +27,7 @@ void File::ReadFile(std::string filename)
 
   Get_Data();
 
-  output_filename = output_dir + filename.substr(0, filename.size() - 3) + "asm";
+  output_filename = output_dir + filename.substr(0, filename.size() - 3) + "s";
   // GetJumps();
 }
 
@@ -53,7 +53,7 @@ void File::GetJumps()
         jmp_address.push_back(object[size + 1]);
       }
     }
-    else if (object[size] == COPY)
+    else if (object[size] == COPY || object[size] == S_INPUT || object[size] == S_OUTPUT)
     {
       size++;
     }
@@ -130,6 +130,10 @@ std::vector<std::string> File::Instructions()
   case STOP:
     command = Write_STOP();
     break;
+  case S_INPUT:
+	break;
+  case S_OUTPUT:
+	break;
   default:
     break;
   }
@@ -180,7 +184,7 @@ void File::WriteFile()
     }
 
     command = Instructions();
-    if (object[address] == COPY)
+    if (object[address] == COPY || object[address] == S_INPUT || object[address] == S_OUTPUT)
     {
       address = address + 3;
     }
@@ -347,7 +351,7 @@ std::vector<std::string> File::Write_MUL()
   command.push_back(addr);
   command.push_back("]");
   command.push_back("\n");
-  command.push_back("jo OVERFLOW");
+  command.push_back("	jo OVERFLOW");
   command.push_back("\n");
 
   return command;
@@ -391,6 +395,8 @@ std::vector<std::string> File::Write_Const()
   command.push_back("  len_output_msg equ $-output_msg\n");
   command.push_back("  newline db 0xa, 0\n");
   command.push_back("  minus_str db '-', 0\n");
+  command.push_back("  output_overflow db 'Deu Overflow', 0\n");
+  command.push_back("  len_overflow equ $-output_overflow\n");
   while (i < constante.size())
   {
     addr = "a" + std::to_string(constante[i + 1]);

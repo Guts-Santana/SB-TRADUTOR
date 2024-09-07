@@ -36,13 +36,13 @@ O comando irá gerar um arquivo `in_out_var.asm` no diretório `output`, irá mo
 Para compilar o tradutor, basta executar o comando abaixo:
 
 ```bash
-g++ -o tradutor tradutor.cpp
+g++ -o Tradutor Tradutor.cpp
 ```
 
 Para executar o tradutor, basta executar o comando abaixo:
 
 ```bash
-./tradutor <arquivo>.obj
+./Tradutor <arquivo>.obj
 ```
 
 Onde `<arquivo>` é o arquivo `.obj` que contém o código fonte.
@@ -50,7 +50,7 @@ Onde `<arquivo>` é o arquivo `.obj` que contém o código fonte.
 Para montar, ligar e executar o código gerado, basta executar o comando abaixo:
 
 ```bash
-nasm -f <arquivo>.asm -o <arquivo>.o
+nasm -f elf32 <arquivo>.asm -o <arquivo>.o
 ld -m elf_i386 -o <arquivo> <arquivo>.o
 ./<arquivo>
 ```

@@ -47,8 +47,8 @@ public:
   std::vector<std::string> Write_Variable();
   std::vector<std::string> Write_JMP_ADDRESS();
 
-  // std::vector<std::string> Write_Input();
-  // std::vector<std::string> Write_Output();
+  //std::vector<std::string> Write_StrInput();
+  //std::vector<std::string> Write_StrOutput();
 };
 
 enum opcodes
@@ -66,5 +66,7 @@ enum opcodes
   STORE = 11,
   INPUT = 12,
   OUTPUT = 13,
-  STOP = 14
+  STOP = 14,
+  S_INPUT = 15,
+  S_OUTPUT = 16
 };

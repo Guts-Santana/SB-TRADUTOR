@@ -4,6 +4,17 @@ global _start, input, string_to_int, len, show_output_msg, output, OVERFLOW
 
 ; TEMPORARY!!!
 OVERFLOW:
+	mov eax, 4                    
+    mov ebx, 1                    
+    mov ecx, output_overflow                     
+    mov edx, len_overflow
+    int 0x80
+
+	mov eax, 4                    ; sys_write
+    mov ebx, 1                    ; stdout
+    mov ecx, newline             ; Newline character
+    mov edx, 1                    ; Length of newline
+    int 0x80
 
     mov eax, 1
     mov ebx, 0
@@ -294,3 +305,5 @@ output:
     mov eax, ecx
     leave
     ret
+
+	
