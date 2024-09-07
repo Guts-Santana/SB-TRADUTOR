@@ -1,5 +1,5 @@
 section .text
-global _start, input, string_to_int, len, output_read, output_written, output, OVERFLOW
+global _start, input, convert_input_to_int, len, output_read, output_written, output, OVERFLOW
 
 OVERFLOW:
 	mov eax, 4                    
@@ -25,7 +25,7 @@ OVERFLOW:
 input:
     enter 0, 0
     mov edi, [ebp + 8]            ; Get the destination pointer
-    mov esi, input_buffer   ; Buffer to store input
+    mov esi, input_buffer         ; Buffer to store input
 
     ; Read input from stdin
     mov eax, 3                    ; sys_read
@@ -50,8 +50,6 @@ input:
     jne .positive                 ; If not negative, jump to positive
 
     ; Handle negative input
-    push esi
-    pop esi
     dec ecx                       ; Exclude the '\n'
     push ecx                      ; Push length of string including '-'
 
@@ -60,7 +58,7 @@ input:
 
     push esi                      ; Push pointer to string (after '-')
     push ecx                      ; Push length of the string
-    call string_to_int             ; Convert string to integer
+    call convert_input_to_int             ; Convert string to integer
     pop ecx
     pop esi
 
@@ -69,19 +67,17 @@ input:
 
 .positive:
     ; Handle positive input
-    push esi
-    pop esi
     dec ecx                       ; Exclude the '\n'
     push ecx                      ; Push length of the string
 
     push esi                      ; Push pointer to string
     push ecx                      ; Push length of the string
-    call string_to_int             ; Convert string to integer
+    call convert_input_to_int             ; Convert string to integer
     pop ecx
     pop esi
 
 .end:
-    mov [edi], eax 
+    mov [edi], eax                ; Store the result in the destination pointer
     pop ecx 
     
     mov eax, ecx 
@@ -94,19 +90,19 @@ input:
 ; Input: EBP+12 - Pointer to the string
 ;        EBP+8  - Length of the string
 ; Output: Integer in EAX
-string_to_int:
+convert_input_to_int:
     enter 0, 0
     mov esi, [ebp + 12]           ; Get pointer to the string
     mov ecx, [ebp + 8]            ; Get length of the string
     xor ebx, ebx                  ; Clear result accumulator (EBX)
 
-.next_digit:
+.string_to_int:
     movzx eax, byte [esi]         ; Load the next character
     inc esi
     sub al, '0'                   ; Convert ASCII to integer
     imul ebx, 10                  ; Multiply previous result by 10
     add ebx, eax                  ; Add the current digit
-    loop .next_digit               ; Repeat for all characters
+    loop .string_to_int              ; Repeat for all characters
 
     mov eax, ebx                  ; Move result to EAX
     leave
