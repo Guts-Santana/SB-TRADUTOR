@@ -291,20 +291,34 @@ output:
 s_output:
     enter 0, 0
     
-    ; Pega os parâmetros da pilha
-    mov ecx, [ebp + 8]  ; Endereço de memória
-    mov edx, [ebp + 12] ; Número de caracteres
-    
-    ; Chamada ao sistema para escrita
-    mov eax, 4          ; Syscall de escrita
-    mov ebx, 1          ; Saída padrão (stdout)
-    int 0x80            ; Chama a interrupção de sistema
-    
-    ; Salva a quantidade de bytes escritos em eax (retorno)
-    mov [ecx], eax      ; Guarda o valor no endereço fornecido
+    ; Get parameters from the stack
+    mov ecx, [ebp + 8]  ; Memory address of the data to be printed (buffer)
+    mov edx, [ebp + 12] ; Number of characters to print
+
+    ; Syscall for writing data to stdout
+    mov eax, 4          ; Syscall number for sys_write
+    mov ebx, 1          ; File descriptor for stdout (1)
+    int 0x80            ; Call kernel
+
+    push eax
+
+    ; Print a new line
+    mov eax, 4                    ; sys_write
+    mov ebx, 1                    ; stdout
+    mov ecx, newline             ; Newline character
+    mov edx, 1                    ; Length of newline
+    int 0x80
+
+    pop ecx
+    push ecx 
+    call output_written 
+    pop ecx
+
+    mov eax, ecx
     
     leave
     ret
+
 
 ; --------------------------------------------------
 ; Input: EBP+8 - Pointer to the memory location to store the number of bytes read
@@ -312,24 +326,27 @@ s_output:
 ; Output: Reads data from stdin and stores it in memory, returns number of bytes read in EAX
 s_input:
     enter 0, 0
-    
-    ; Pega os parâmetros da pilha
-    mov ecx, [ebp + 8]  ; Endereço de memória
-    mov edx, [ebp + 12] ; Número de caracteres
 
-    call tst
-    
-    ; Chamada ao sistema para leitura
-    mov eax, 3          ; Syscall de leitura
-    mov ebx, 0          ; Entrada padrão (stdin)
-    int 0x80            ; Chama a interrupção de sistema
-    
-    ; Salva a quantidade de bytes lidos em eax (retorno)
-    mov [ecx], eax      ; Guarda o valor lido no endereço fornecido
-    
-    ; Finaliza a função
+    ; Get parameters from the stack
+    mov ecx, [ebp + 8]  ; Memory address where data will be stored (buffer)
+    mov edx, [ebp + 12] ; Number of characters to read
+
+    ; Syscall for reading data from stdin
+    mov eax, 3          ; Syscall number for sys_read
+    mov ebx, 0          ; File descriptor for stdin (0)
+    int 0x80            ; Call kernel
+
+    push eax
+    pop ecx
+    push ecx 
+    call output_read 
+    pop ecx
+
+    mov eax, ecx
+
     leave
     ret
+
 
 tst:
     ret
