@@ -38,8 +38,15 @@ input:
 
     ; Check if input is negative
     movzx eax, byte [esi]         ; Load the first character
-    cmp al, '-'                   ; Compare with '-'
     pop ecx
+
+    pusha
+    push ecx 
+    call output_read 
+    pop ecx 
+    popa
+
+    cmp al, '-'                   ; Compare with '-'
     jne .positive                 ; If not negative, jump to positive
 
     ; Handle negative input
@@ -76,13 +83,6 @@ input:
 .end:
     mov [edi], eax 
     pop ecx 
-
-    pusha
-    push ecx 
-    call output_read 
-    pop ecx 
-    popa
-
     
     mov eax, ecx 
     leave
