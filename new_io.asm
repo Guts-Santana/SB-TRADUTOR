@@ -24,10 +24,9 @@ OVERFLOW:
 ; Output: Integer in EAX
 input:
     enter 0, 0
-    mov edi, input_buffer   ; Clear buffer
-    mov ecx, 12
+    mov edi, input_buffer 
+    mov ecx, 12 ; Buffer size
     mov al, 0
-    rep stosb                     ; Fill buffer with 0's
 
     mov edi, [ebp + 8]            ; Get the destination pointer
     mov esi, input_buffer   ; Buffer to store input
@@ -249,7 +248,6 @@ output:
     mov edi, input_buffer
     mov ecx, 12
     mov al, 0
-    rep stosb                   ; Fill buffer with 0's
 
     mov edi, [ebp + 8]          ; Get the pointer to the integer value
     mov esi, input_buffer ; Buffer to store the string representation
@@ -302,13 +300,6 @@ output:
     mov edx, 1                    ; Length of newline
     int 0x80
 
-    popa
-
-    ; Call show_output_msg to display output
-    pusha
-    push ecx                    ; Push length of string
-    call output_written         ; Call show_output_msg
-    pop ecx                     ; Restore length of string
     popa
 
     ; Return the length of the string in EAX
