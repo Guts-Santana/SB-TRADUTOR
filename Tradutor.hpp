@@ -42,13 +42,15 @@ public:
   std::vector<std::string> Write_STOP();
   std::vector<std::string> Write_Output();
   std::vector<std::string> Write_Input();
+  std::vector<std::string> Write_S_INPUT();
+  std::vector<std::string> Write_S_OUTPUT();
 
   std::vector<std::string> Write_Const();
   std::vector<std::string> Write_Variable();
   std::vector<std::string> Write_JMP_ADDRESS();
 
-  //std::vector<std::string> Write_StrInput();
-  //std::vector<std::string> Write_StrOutput();
+  // std::vector<std::string> Write_StrInput();
+  // std::vector<std::string> Write_StrOutput();
 };
 
 enum opcodes

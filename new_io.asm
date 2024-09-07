@@ -1,5 +1,5 @@
 section .text
-global _start, input, convert_input_to_int, len, output_read, output_written, output, OVERFLOW
+global _start, input, convert_input_to_int, len, output_read, output_written, output, OVERFLOW, s_input, s_output
 
 OVERFLOW:
 	mov eax, 4                    
@@ -284,4 +284,52 @@ output:
     leave
     ret
 
+; --------------------------------------------------
+; Input: EBP+8 - Pointer to the memory location with the data to print
+;        EBP+12 - Number of characters to print
+; Output: Prints the data to stdout, returns number of bytes written in EAX
+s_output:
+    enter 0, 0
     
+    ; Pega os parâmetros da pilha
+    mov ecx, [ebp + 8]  ; Endereço de memória
+    mov edx, [ebp + 12] ; Número de caracteres
+    
+    ; Chamada ao sistema para escrita
+    mov eax, 4          ; Syscall de escrita
+    mov ebx, 1          ; Saída padrão (stdout)
+    int 0x80            ; Chama a interrupção de sistema
+    
+    ; Salva a quantidade de bytes escritos em eax (retorno)
+    mov [ecx], eax      ; Guarda o valor no endereço fornecido
+    
+    leave
+    ret
+
+; --------------------------------------------------
+; Input: EBP+8 - Pointer to the memory location to store the number of bytes read
+;        EBP+12 - Number of characters to read
+; Output: Reads data from stdin and stores it in memory, returns number of bytes read in EAX
+s_input:
+    enter 0, 0
+    
+    ; Pega os parâmetros da pilha
+    mov ecx, [ebp + 8]  ; Endereço de memória
+    mov edx, [ebp + 12] ; Número de caracteres
+
+    call tst
+    
+    ; Chamada ao sistema para leitura
+    mov eax, 3          ; Syscall de leitura
+    mov ebx, 0          ; Entrada padrão (stdin)
+    int 0x80            ; Chama a interrupção de sistema
+    
+    ; Salva a quantidade de bytes lidos em eax (retorno)
+    mov [ecx], eax      ; Guarda o valor lido no endereço fornecido
+    
+    ; Finaliza a função
+    leave
+    ret
+
+tst:
+    ret

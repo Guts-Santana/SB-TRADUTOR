@@ -131,9 +131,12 @@ std::vector<std::string> File::Instructions()
     command = Write_STOP();
     break;
   case S_INPUT:
+    command = Write_S_INPUT();
     break;
   case S_OUTPUT:
+    command = Write_S_OUTPUT();
     break;
+
   default:
     break;
   }
@@ -436,6 +439,42 @@ std::vector<std::string> File::Write_Output()
   command.push_back("    push ebx\n");
   command.push_back("    push " + label_addr + "\n"); // Load the value from the label's address
   command.push_back("    call output\n");
+  command.push_back("    pop edx\n");
+  command.push_back("    pop ebx\n");
+
+  return command;
+}
+
+std::vector<std::string> File::Write_S_INPUT()
+{
+  std::vector<std::string> command;
+  std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
+  int num_chars = object[address + 2];                                // Number of characters to read
+
+  // Generate assembly code for input
+  command.push_back("    push ebx\n");
+  command.push_back("    push " + std::to_string(num_chars) + "\n");
+  command.push_back("    push " + label_addr + "\n");
+  command.push_back("    call s_input\n"); // Call the s_input function
+  command.push_back("    pop edx\n");
+  command.push_back("    pop edx\n");
+  command.push_back("    pop ebx\n");
+
+  return command;
+}
+
+std::vector<std::string> File::Write_S_OUTPUT()
+{
+  std::vector<std::string> command;
+  std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
+  int num_chars = object[address + 2];                                // Number of characters to write
+
+  // Generate assembly code for output
+  command.push_back("    push ebx\n");
+  command.push_back("    push " + std::to_string(num_chars) + "\n");
+  command.push_back("    push " + label_addr + "\n");
+  command.push_back("    call s_output\n"); // Call the s_output function
+  command.push_back("    pop edx\n");
   command.push_back("    pop edx\n");
   command.push_back("    pop ebx\n");
 
