@@ -1,5 +1,5 @@
 section .text
-global _start, input, string_to_int, len, show_output_msg, output, OVERFLOW
+global _start, input, string_to_int, len, output_read, output_written, output, OVERFLOW
 
 
 ; TEMPORARY!!!
@@ -41,14 +41,16 @@ input:
     mov edx, 12                   ; Buffer size
     int 0x80
 
+    push eax
+
     ; Check if input is negative
     movzx eax, byte [esi]         ; Load the first character
     cmp al, '-'                   ; Compare with '-'
+    pop ecx
     jne .positive                 ; If not negative, jump to positive
 
     ; Handle negative input
     push esi
-    call len                      ; Get the length of the string
     pop esi
     dec ecx                       ; Exclude the '\n'
     push ecx                      ; Push length of string including '-'
@@ -68,7 +70,6 @@ input:
 .positive:
     ; Handle positive input
     push esi
-    call len                      ; Get the length of the string
     pop esi
     dec ecx                       ; Exclude the '\n'
     push ecx                      ; Push length of the string
@@ -91,7 +92,7 @@ input:
     push edi 
     push esi 
     push ecx 
-    call show_output_msg 
+    call output_read 
     pop ecx 
     pop esi 
     pop edi 
@@ -150,7 +151,7 @@ count:
 ; -----------------------------------------------
 ; Show output message and print integer result
 ; Input: EBP+8 - Pointer to the integer value to print
-show_output_msg:
+output_read:
     enter 0, 0
     mov edi, [ebp + 8]            ; Get the integer to print
     mov esi, buffer               ; Buffer to store the converted string
@@ -158,8 +159,8 @@ show_output_msg:
     ; Print the output message
     mov eax, 4                    ; sys_write
     mov ebx, 1                    ; stdout
-    mov ecx, output_msg           ; Message to print
-    mov edx, len_output_msg       ; Length of the message
+    mov ecx, read_msg           ; Message to print
+    mov edx, len_read_msg       ; Length of the message
     int 0x80
 
     ; Convert the integer to string
@@ -186,6 +187,47 @@ show_output_msg:
     int 0x80
     leave
     ret
+
+; -----------------------------------------------
+; Show output message and print integer result
+; Input: EBP+8 - Pointer to the integer value to print
+output_written:
+    enter 0, 0
+    mov edi, [ebp + 8]            ; Get the integer to print
+    mov esi, buffer               ; Buffer to store the converted string
+
+    ; Print the output message
+    mov eax, 4                    ; sys_write
+    mov ebx, 1                    ; stdout
+    mov ecx, written_msg           ; Message to print
+    mov edx, len_written_msg       ; Length of the message
+    int 0x80
+
+    ; Convert the integer to string
+    push edi                      ; Push integer value
+    push esi                      ; Push pointer to buffer
+    call int_to_string             ; Convert integer to string
+    pop esi                       ; Restore buffer pointer
+    pop edi                       ; Restore integer value
+
+    ; Print the converted string
+    push eax                      ; Push pointer to string
+    push ecx                      ; Push length of string
+    mov eax, 4                    ; sys_write
+    mov ebx, 1                    ; stdout
+    pop edx                       ; Length of string
+    pop ecx                       ; Pointer to string
+    int 0x80
+
+    ; Print a new line
+    mov eax, 4                    ; sys_write
+    mov ebx, 1                    ; stdout
+    mov ecx, newline             ; Newline character
+    mov edx, 1                    ; Length of newline
+    int 0x80
+    leave
+    ret
+
 
 int_to_string:
     enter 0,0 ;
@@ -292,7 +334,7 @@ output:
     push edi
     push esi
     push ecx                    ; Push length of string
-    call show_output_msg         ; Call show_output_msg
+    call output_written         ; Call show_output_msg
     pop ecx                     ; Restore registers
     pop esi
     pop edi

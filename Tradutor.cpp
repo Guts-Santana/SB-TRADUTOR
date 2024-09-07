@@ -131,9 +131,9 @@ std::vector<std::string> File::Instructions()
     command = Write_STOP();
     break;
   case S_INPUT:
-	break;
+    break;
   case S_OUTPUT:
-	break;
+    break;
   default:
     break;
   }
@@ -391,8 +391,10 @@ std::vector<std::string> File::Write_Const()
 
   command.push_back("section .data");
   command.push_back("\n");
-  command.push_back("  output_msg db 0, 'Quantidade de Bytes lidos/escritos = ', 0\n");
-  command.push_back("  len_output_msg equ $-output_msg\n");
+  command.push_back("  read_msg db 0, 'Quantidade de Bytes lidos: ', 0\n");
+  command.push_back("  len_read_msg equ $-read_msg\n");
+  command.push_back("  written_msg db 0, 'Quantidade de Bytes escritos: ', 0\n");
+  command.push_back("  len_written_msg equ $-written_msg\n");
   command.push_back("  newline db 0xa, 0\n");
   command.push_back("  minus_str db '-', 0\n");
   command.push_back("  output_overflow db 'Deu Overflow', 0\n");

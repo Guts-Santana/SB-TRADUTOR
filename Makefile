@@ -27,7 +27,7 @@ run_tradutor:
 
 # Assemble the .asm file, placing object files in output/
 assemble:
-	$(NASM) -f elf32 $(OUTPUT_DIR)/$(FILE).asm -o $(OUTPUT_DIR)/$(FILE).o
+	$(NASM) -f elf32 $(OUTPUT_DIR)/$(FILE).s -o $(OUTPUT_DIR)/$(FILE).o
 
 # Link the object file to create the final binary in bin/
 link:
