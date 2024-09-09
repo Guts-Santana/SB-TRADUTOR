@@ -40,11 +40,7 @@ input:
     mov edx, MAX_BUFFER_SIZE_INPUT   ; Buffer size
     int 0x80
 
-    push eax
-
-    ; Check if input is negative
-    movzx eax, byte [esi]         ; Load the first character
-    pop ecx
+    mov ecx, eax                    ; Return the number of bytes read in ecx
 
     pusha
     push esi
@@ -53,6 +49,8 @@ input:
     pop ecx 
     pop esi 
     popa
+    ; Check if input is negative
+    movzx eax, byte [esi]         ; Load the first character
 
     cmp al, '-'                   ; Compare with '-'
     jne .positive                 ; If not negative, jump to positive
