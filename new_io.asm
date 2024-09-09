@@ -1,7 +1,7 @@
 %define INPUT_BUFFER [ebp+12]
 %define BUFFER [ebp+12]
 
-MAX_BUFFER_SIZE_INPUT equ 12
+MAX_BUFFER_SIZE_INPUT equ 12 ; Maximum size of the input buffer = 32 bit integer + '\n' + '\0'
 
 section .text
 global _start, input, output, overflow, s_input, s_output
@@ -233,15 +233,14 @@ int_to_string:
 ; --------------------------------------------------
 ; Output: Print an integer to stdout
 ; Input: EBP+8 - Pointer to the integer to print
+;        EBP+12 - Buffer to store the converted string
 output:
     enter 0, 0
     sub esp, 4                 ; Reserve space for the negative flag
     mov byte [esp], 0          ; Clear the negative flag
-    ; Clear the buffer
-    mov edi, input_buffer
 
     mov edi, [ebp + 8]          ; Get the pointer to the integer value
-    mov esi, input_buffer       ; Buffer to store the string representation
+    mov esi, INPUT_BUFFER       ; Buffer to store the string representation
     mov eax, [edi]              ; Load integer into EAX for checking
 
     ; Check if the number is negative
