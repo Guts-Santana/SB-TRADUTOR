@@ -1,3 +1,8 @@
+%define INPUT_BUFFER [ebp+12]
+%define BUFFER [ebp+12]
+
+MAX_BUFFER_SIZE_INPUT equ 12
+
 section .text
 global _start, input, output, overflow, s_input, s_output
 
@@ -21,17 +26,18 @@ overflow:
 ; -----------------------------------------------
 ; Input: Read a decimal value from stdin and convert it to an integer
 ; Input: EBP+8 - Pointer to variable to store the result
+;        EBP+12 - Pointer to the buffer to store the input
 ; Output: Integer in EAX - Bytes read
 input:
     enter 0, 0
     mov edi, [ebp + 8]            ; Get the destination pointer
-    mov esi, input_buffer         ; Buffer to store input
+    mov esi, INPUT_BUFFER         ; Buffer to store input
 
     ; Read input from stdin
-    mov eax, 3                    ; sys_read
-    mov ebx, 0                    ; stdin
-    mov ecx, esi                  ; Buffer pointer
-    mov edx, 12                   ; Buffer size
+    mov eax, 3                       ; sys_read
+    mov ebx, 0                       ; stdin
+    mov ecx, esi                     ; Buffer pointer
+    mov edx, MAX_BUFFER_SIZE_INPUT   ; Buffer size
     int 0x80
 
     push eax
@@ -41,9 +47,11 @@ input:
     pop ecx
 
     pusha
-    push ecx 
-    call output_read 
+    push esi
+    push ecx
+    call output_read
     pop ecx 
+    pop esi 
     popa
 
     cmp al, '-'                   ; Compare with '-'
@@ -116,8 +124,8 @@ output_read:
     mov edi, [ebp + 8]            ; Get the integer to print
     mov esi, buffer               ; Buffer to store the converted string
 
-    cmp edi, 12
-    jg overflow
+    ;cmp edi, 12
+    ;jge overflow
 
     ; Print the output message
     mov eax, 4                    ; sys_write
