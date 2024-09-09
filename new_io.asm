@@ -43,11 +43,9 @@ input:
     mov ecx, eax                    ; Return the number of bytes read in ecx
 
     pusha
-    push esi
-    push ecx
+    push ecx                        ; Make sure to pass the length of the string as the first argument
     call output_read
-    pop ecx 
-    pop esi 
+    pop ecx                         ; Restore the length of the string
     popa
     ; Check if input is negative
     movzx eax, byte [esi]         ; Load the first character
@@ -69,7 +67,7 @@ input:
     pop esi
 
     neg eax                       ; Negate the result for negative numbers
-    jmp .end_input                      ; Jump to the end
+    jmp .end_input                ; Jump to the end
 
 .positive:
     ; Handle positive input
@@ -181,10 +179,9 @@ output_written:
 
     ; Print the converted string
     push eax                      ; Push pointer to string
-    push ecx                      ; Push length of string
     mov eax, 4                    ; sys_write
     mov ebx, 1                    ; stdout
-    pop edx                       ; Length of string
+    mov edx, ecx                  ; Length of string
     pop ecx                       ; Pointer to string
     int 0x80
 
