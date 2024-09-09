@@ -25,91 +25,84 @@ overflow:
 
 ; -----------------------------------------------
 ; Input: Read a decimal value from stdin and convert it to an integer
-; Input: EBP+8 - Pointer to variable to store the result
+;        EBP+8 - Pointer to variable to store the result
 ;        EBP+12 - Pointer to the buffer to store the input
 ; Output: Integer in EAX - Bytes read
 input:
     enter 0, 0
-    mov edi, [ebp + 8]            ; Get the destination pointer
-    mov esi, INPUT_BUFFER         ; Buffer to store input
+    mov edi, [ebp+8]                   ; Destination pointer for result
+    mov esi, INPUT_BUFFER              ; Input buffer pointer
 
     ; Read input from stdin
-    mov eax, 3                       ; sys_read
-    mov ebx, 0                       ; stdin
-    mov ecx, esi                     ; Buffer pointer
-    mov edx, MAX_BUFFER_SIZE_INPUT   ; Buffer size
-    int 0x80
+    mov eax, 3
+    mov ebx, 0                         ; stdin
+    mov ecx, esi                       ; Buffer pointer
+    mov edx, MAX_BUFFER_SIZE_INPUT     ; Buffer size
+    int 0x80                           ; Perform syscall to read from stdin
 
-    mov ecx, eax                    ; Return the number of bytes read in ecx
+    mov ecx, eax                       ; Store number of bytes read to ecx
 
     pusha
-    push ecx                        ; Make sure to pass the length of the string as the first argument
-    call output_read
-    pop ecx                         ; Restore the length of the string
+    push ecx                          ; Save the number of bytes read
+    call output_read                  ; Print the input message
+    pop ecx
     popa
-    ; Check if input is negative
-    movzx eax, byte [esi]         ; Load the first character
 
-    cmp al, '-'                   ; Compare with '-'
-    jne .positive                 ; If not negative, jump to positive
+    mov ecx, eax                       ; Store number of bytes read to ecx
+    mov [edi], eax                     ; Store bytes read at the result pointer location for return
 
-    ; Handle negative input
-    dec ecx                       ; Exclude the '\n'
-    push ecx                      ; Push length of string including '-'
+    ; Prepare buffer for conversion
+    test eax, eax                      ; Check if read syscall succeeded
+    jz .error_read                     ; If zero, jump to error handler
+    dec ecx                            ; Adjust for newline character
+    movzx eax, byte [esi]              ; Load first character to check for negative
 
-    inc esi                       ; Move to next character (skip '-')
-    dec ecx                       ; Adjust length to ignore '-'
+    cmp al, '-'
+    jne .convert_positive
 
-    push esi                      ; Push pointer to string (after '-')
-    push ecx                      ; Push length of the string
-    call convert_input_to_int     ; Convert string to integer
-    pop ecx
-    pop esi
+; Handle negative number
+.negative:
+    inc esi                            ; Increment buffer pointer to skip '-'
+    dec ecx                            ; Adjust length excluding '-'
+    call convert_to_int
+    neg eax                            ; Convert result to negative
+    jmp .store_result
 
-    neg eax                       ; Negate the result for negative numbers
-    jmp .end_input                ; Jump to the end
+; Handle positive number
+.convert_positive:
+    call convert_to_int                ; Call conversion on unmodified buffer
 
-.positive:
-    ; Handle positive input
-    dec ecx                       ; Exclude the '\n'
-    push ecx                      ; Push length of the string
-
-    push esi                      ; Push pointer to string
-    push ecx                      ; Push length of the string
-    call convert_input_to_int     ; Convert string to integer
-    pop ecx
-    pop esi
-
-.end_input:
-    mov [edi], eax                ; Store the result in the destination pointer
-    
-    pop ecx 
-    mov eax, ecx                  ; Return the number of bytes read in eax
+.store_result:
+    mov [edi], eax                     ; Store the converted integer
+    mov eax, [edi]                     ; Load bytes read into eax for return
     leave
     ret
 
+.error_read:
+    mov eax, -1                        ; Indicate error by returning -1
+    leave
+    ret
 
 ; -----------------------------------------------
-; Convert a string to an integer
-; Input: EBP+12 - Pointer to the string
-;        EBP+8  - Length of the string
-; Output: Integer in EAX
-convert_input_to_int:
+; Convert buffer to integer
+; Assumes buffer pointer in esi and length in ecx
+convert_to_int:
     enter 0, 0
-    mov esi, [ebp + 12]           ; Get pointer to the string
-    mov ecx, [ebp + 8]            ; Get length of the string
-
-.string_to_int:
-    movzx eax, byte [esi]         ; Load the next character
-    inc esi
-    sub al, '0'                   ; Convert ASCII to integer
-    imul ebx, 10                  ; Multiply previous result by 10
-    add ebx, eax                  ; Add the current digit
-    loop .string_to_int           ; Repeat for all characters
-
-    mov eax, ebx                  ; Move result to EAX
-    leave
-    ret
+    xor ebx, ebx                       ; Clear ebx for accumulating the result
+    .loop_convert:
+        test ecx, ecx                  ; Check if there's more characters to process
+        jz .done                       ; If zero, finish
+        movzx eax, byte [esi]          ; Load next character
+        sub eax, '0'                   ; Convert from ASCII to integer
+        imul ebx, ebx, 10              ; Multiply current result by 10
+        add ebx, eax                   ; Add new digit to result
+        inc esi                        ; Move to next character
+        dec ecx                        ; Decrease count
+        jmp .loop_convert
+    .done:
+        mov eax, ebx                   ; Place result in eax
+        leave
+        ret
 
 ; -----------------------------------------------
 ; Show output message and print integer result
@@ -119,20 +112,17 @@ output_read:
     mov edi, [ebp + 8]            ; Get the integer to print
     mov esi, buffer               ; Buffer to store the converted string
 
-    ;cmp edi, 12
-    ;jge overflow
-
     ; Print the output message
     mov eax, 4                    ; sys_write
     mov ebx, 1                    ; stdout
-    mov ecx, read_msg           ; Message to print
-    mov edx, len_read_msg       ; Length of the message
+    mov ecx, read_msg             ; Message to print
+    mov edx, len_read_msg         ; Length of the message
     int 0x80
 
     ; Convert the integer to string
     push edi                      ; Push integer value
     push esi                      ; Push pointer to buffer
-    call output_to_string            ; Convert integer to string
+    call output_to_string         ; Convert integer to string
     pop esi                       ; Restore buffer pointer
     pop edi                       ; Restore integer value
 
@@ -153,6 +143,7 @@ output_read:
     int 0x80
     leave
     ret
+
 
 ; -----------------------------------------------
 ; Show output message and print integer result
