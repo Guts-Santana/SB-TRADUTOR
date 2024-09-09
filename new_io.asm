@@ -116,7 +116,7 @@ output_read:
     mov edi, [ebp + 8]            ; Get the integer to print
     mov esi, buffer               ; Buffer to store the converted string
 
-    cmp edi, 11
+    cmp edi, 12
     jg overflow
 
     ; Print the output message
