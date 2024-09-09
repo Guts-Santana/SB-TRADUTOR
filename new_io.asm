@@ -98,7 +98,6 @@ convert_input_to_int:
     enter 0, 0
     mov esi, [ebp + 12]           ; Get pointer to the string
     mov ecx, [ebp + 8]            ; Get length of the string
-    xor ebx, ebx                  ; Clear result accumulator (EBX)
 
 .string_to_int:
     movzx eax, byte [esi]         ; Load the next character
@@ -133,7 +132,7 @@ output_read:
     ; Convert the integer to string
     push edi                      ; Push integer value
     push esi                      ; Push pointer to buffer
-    call int_to_string            ; Convert integer to string
+    call output_to_string            ; Convert integer to string
     pop esi                       ; Restore buffer pointer
     pop edi                       ; Restore integer value
 
@@ -173,7 +172,7 @@ output_written:
     ; Convert the integer to string
     push edi                      ; Push integer value
     push esi                      ; Push pointer to buffer
-    call int_to_string             ; Convert integer to string
+    call output_to_string             ; Convert integer to string
     pop esi                       ; Restore buffer pointer
     pop edi                       ; Restore integer value
 
@@ -193,37 +192,6 @@ output_written:
     int 0x80
     leave
     ret
-
-
-; -----------------------------------------------
-; Convert an integer to a string
-; Input: EBP+8 - Pointer to the buffer to store the string
-;        EBP+12 - Integer to convert
-; Output: Pointer to the beginning of the string in EAX
-int_to_string:
-    enter 0, 0                 ; Set up the stack frame
-    
-    mov eax, [ebp + 12]        ; Load the integer to convert (from EBP+12) into EAX
-    mov esi, [ebp + 8]         ; Load the destination buffer address (from EBP+8) into ESI
-    add esi, 9                 ; Move to the end of the buffer (assuming max 9 digits)
-    mov byte [esi], 0          ; Null-terminate the string (set last byte to 0)
-    
-    mov ecx, 0                 ; ECX will count the digits
-    mov ebx, 10                ; Set divisor to 10 (for base-10 division)
-    
-.next_digit:
-    inc ecx                    ; Increment the digit counter
-    xor edx, edx               ; Clear EDX (high part of EAX) before division
-    div ebx                    ; Divide EAX by 10, result in EAX, remainder in EDX
-    add dl, '0'                ; Convert the remainder (DL) to ASCII by adding '0'
-    dec esi                    ; Move back in the buffer
-    mov [esi], dl              ; Store the ASCII digit in the buffer
-    test eax, eax              ; Check if EAX (quotient) is zero
-    jnz .next_digit            ; If not zero, continue with the next digit
-
-    mov eax, esi               ; Return the pointer to the beginning of the string (ESI)
-    leave                      ; Restore the stack frame
-    ret                        ; Return to the caller
 
 ; --------------------------------------------------
 ; Output: Print an integer to stdout
@@ -250,7 +218,7 @@ output:
     ; Convert the integer to a string
     push eax                    ; Preserve integer value
     push esi                    ; Push buffer pointer
-    call int_to_string          ; Convert integer to string
+    call output_to_string          ; Convert integer to string
     pop esi                     ; Restore buffer pointer
     pop ebx                     ; Discard preserved value
 
@@ -263,11 +231,10 @@ output:
 
 .end_output:
     push eax                    ; Pointer to string
-    push ecx                    ; Length of the string
     mov eax, 4                  ; sys_write
     mov ebx, 1                  ; stdout
-    pop edx                     ; Restore length of the string
-    pop ecx                     ; Restore pointer to string
+    mov edx, ecx                ; Length of the string
+    pop ecx                     ; Pointer to string
     int 0x80
 
     mov ecx, edx                ; Store string length in ECX
@@ -294,6 +261,37 @@ output:
     mov eax, ecx
     leave
     ret
+
+; -----------------------------------------------
+; Convert an integer to a string
+; Input: EBP+8 - Pointer to the buffer to store the string
+;        EBP+12 - Integer to convert
+; Output: Pointer to the beginning of the string in EAX
+output_to_string:
+    enter 0, 0                 ; Set up the stack frame
+    
+    mov eax, [ebp + 12]        ; Load the integer to convert (from EBP+12) into EAX
+    mov esi, [ebp + 8]         ; Load the destination buffer address (from EBP+8) into ESI
+    add esi, 9                 ; Move to the end of the buffer (assuming max 9 digits)
+    mov byte [esi], 0          ; Null-terminate the string (set last byte to 0)
+    
+    mov ecx, 0                 ; ECX will count the digits
+    mov ebx, 10                ; Set divisor to 10 (for base-10 division)
+    
+.next_digit:
+    inc ecx                    ; Increment the digit counter
+    xor edx, edx               ; Clear EDX (high part of EAX) before division
+    div ebx                    ; Divide EAX by 10, result in EAX, remainder in EDX
+    add dl, '0'                ; Convert the remainder (DL) to ASCII by adding '0'
+    dec esi                    ; Move back in the buffer
+    mov [esi], dl              ; Store the ASCII digit in the buffer
+    test eax, eax              ; Check if EAX (quotient) is zero
+    jnz .next_digit            ; If not zero, continue with the next digit
+
+    mov eax, esi               ; Return the pointer to the beginning of the string (ESI)
+    leave                      ; Restore the stack frame
+    ret                        ; Return to the caller
+
 
 ; --------------------------------------------------
 ; Input: EBP+8 - Pointer to the memory location with the data to print
