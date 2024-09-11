@@ -55,6 +55,10 @@ ld -m elf_i386 -o <arquivo> <arquivo>.o
 ./<arquivo>
 ```
 
+O arquivo executável imprimirá quantos bytes foram lidos e escritos no terminal.
+
+**OBS.:** A quantidade de bytes lidos leva em consideração o caractere de nova linha (`\n`).
+
 ## Estrutura do projeto
 
 ```

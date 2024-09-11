@@ -209,9 +209,9 @@ output:
     ; Convert the integer to a string
     push eax                    ; Preserve integer value
     push esi                    ; Push buffer pointer
-    call output_to_string          ; Convert integer to string
+    call output_to_string       ; Convert integer to string
     pop esi                     ; Restore buffer pointer
-    pop ebx                     ; Discard preserved value
+    pop ebx                     
 
     cmp byte [esp], 1           ; Check if the number was negative
     jne .end_output             ; If not negative, jump to done
@@ -269,19 +269,19 @@ output_to_string:
     mov ecx, 0                 ; ECX will count the digits
     mov ebx, 10                ; Set divisor to 10 (for base-10 division)
     
-.next_digit:
-    inc ecx                    ; Increment the digit counter
-    xor edx, edx               ; Clear EDX (high part of EAX) before division
-    div ebx                    ; Divide EAX by 10, result in EAX, remainder in EDX
-    add dl, '0'                ; Convert the remainder (DL) to ASCII by adding '0'
-    dec esi                    ; Move back in the buffer
-    mov [esi], dl              ; Store the ASCII digit in the buffer
-    test eax, eax              ; Check if EAX (quotient) is zero
-    jnz .next_digit            ; If not zero, continue with the next digit
+    .next_digit:
+        inc ecx                ; Increment the digit counter
+        xor edx, edx           ; Clear EDX (high part of EAX) before division
+        div ebx                ; Divide EAX by 10, result in EAX, remainder in EDX
+        add dl, '0'            ; Convert the remainder (DL) to ASCII by adding '0'
+        dec esi                ; Move back in the buffer
+        mov [esi], dl          ; Store the ASCII digit in the buffer
+        test eax, eax          ; Check if EAX (quotient) is zero
+        jnz .next_digit        ; If not zero, continue with the next digit
 
-    mov eax, esi               ; Return the pointer to the beginning of the string (ESI)
-    leave                      ; Restore the stack frame
-    ret                        ; Return to the caller
+        mov eax, esi           ; Return the pointer to the beginning of the string (ESI)
+        leave                  ; Restore the stack frame
+        ret                    ; Return to the caller
 
 
 ; --------------------------------------------------
