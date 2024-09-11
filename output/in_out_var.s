@@ -1,5 +1,6 @@
 %define INPUT_BUFFER [ebp+12]
 %define BUFFER [ebp+12]
+%define NEG_FLAG [ebp-4]
 
 MAX_BUFFER_SIZE_INPUT equ 12 ; Maximum size of the input buffer = 32 bit integer + '\n' + '\0'
 
@@ -189,7 +190,7 @@ output_written:
 ;        EBP+12 - Buffer to store the converted string
 output:
     enter 4, 0
-    mov byte [ebp-4], 0          ; Clear the negative flag
+    mov byte NEG_FLAG, 0          ; Clear the negative flag
 
     mov edi, [ebp + 8]          ; Get the pointer to the integer value
     mov esi, INPUT_BUFFER       ; Buffer to store the string representation
@@ -201,7 +202,7 @@ output:
 
     ; Handle negative numbers
     neg eax                     ; Negate the number
-    mov byte [ebp-4], 1           ; Set the negative flag
+    mov byte NEG_FLAG, 1           ; Set the negative flag
 
 .positive_output:
     ; Convert the integer to a string
@@ -211,7 +212,7 @@ output:
     pop esi                     ; Restore buffer pointer
     pop ebx                     
 
-    cmp byte [ebp-4], 1           ; Check if the number was negative
+    cmp byte NEG_FLAG, 1           ; Check if the number was negative
     jne .end_output             ; If not negative, jump to done
 
     dec eax
