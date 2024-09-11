@@ -28,7 +28,6 @@ void File::ReadFile(std::string filename)
   Get_Data();
 
   output_filename = output_dir + filename.substr(0, filename.size() - 3) + "s";
-  // GetJumps();
 }
 
 void File::GetJumps()
@@ -63,10 +62,6 @@ void File::GetJumps()
     }
     size = size + 2;
   }
-  // for (int i = 0; i < jmp_address.size(); i++)
-  // {
-  // 	std::cout<< jmp_address[i] << " " << std::flush;
-  // }
 }
 
 std::vector<std::string> File::Write_JMP_ADDRESS()
@@ -172,7 +167,6 @@ void File::WriteFile()
     std::cerr << "Unable to open file for writing: " << output_filename << std::endl;
     return;
   }
-  // file << "section .text" << '\n';
 
   AppendIOFunctions(file);
 
@@ -270,7 +264,7 @@ std::vector<std::string> File::Write_LOADSTORE(int opc)
   return command;
 }
 
-std::vector<std::string> File::Write_COPY() // precisa de um push
+std::vector<std::string> File::Write_COPY()
 {
   std::string addr;
   std::vector<std::string> command;
@@ -418,15 +412,14 @@ std::vector<std::string> File::Write_Const()
 std::vector<std::string> File::Write_Input()
 {
   std::vector<std::string> command;
-  std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
+  std::string label_addr = "a" + std::to_string(object[address + 1]);
 
-  // Generate assembly code for input
   command.push_back("    push ebx\n");
   command.push_back("    push input_buffer\n");
   command.push_back("    push " + label_addr + "\n");
-  command.push_back("    call input\n"); // Call the input_number function
+  command.push_back("    call input\n");
   command.push_back("    pop edx\n");
-  command.push_back("    pop edx\n"); // Store the input in the label's address
+  command.push_back("    pop edx\n");
   command.push_back("    pop ebx\n");
 
   return command;
@@ -435,12 +428,11 @@ std::vector<std::string> File::Write_Input()
 std::vector<std::string> File::Write_Output()
 {
   std::vector<std::string> command;
-  std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
+  std::string label_addr = "a" + std::to_string(object[address + 1]);
 
-  // Generate assembly code for output
   command.push_back("    push ebx\n");
   command.push_back("    push buffer\n");
-  command.push_back("    push " + label_addr + "\n"); // Load the value from the label's address
+  command.push_back("    push " + label_addr + "\n");
   command.push_back("    call output\n");
   command.push_back("    pop edx\n");
   command.push_back("    pop edx\n");
@@ -452,14 +444,13 @@ std::vector<std::string> File::Write_Output()
 std::vector<std::string> File::Write_S_INPUT()
 {
   std::vector<std::string> command;
-  std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
-  int num_chars = object[address + 2];                                // Number of characters to read
+  std::string label_addr = "a" + std::to_string(object[address + 1]);
+  int num_chars = object[address + 2];
 
-  // Generate assembly code for input
   command.push_back("    push ebx\n");
   command.push_back("    push " + std::to_string(num_chars) + "\n");
   command.push_back("    push " + label_addr + "\n");
-  command.push_back("    call s_input\n"); // Call the s_input function
+  command.push_back("    call s_input\n");
   command.push_back("    pop edx\n");
   command.push_back("    pop edx\n");
   command.push_back("    pop ebx\n");
@@ -470,14 +461,13 @@ std::vector<std::string> File::Write_S_INPUT()
 std::vector<std::string> File::Write_S_OUTPUT()
 {
   std::vector<std::string> command;
-  std::string label_addr = "a" + std::to_string(object[address + 1]); // Address for the label
-  int num_chars = object[address + 2];                                // Number of characters to write
+  std::string label_addr = "a" + std::to_string(object[address + 1]);
+  int num_chars = object[address + 2];
 
-  // Generate assembly code for output
   command.push_back("    push ebx\n");
   command.push_back("    push " + std::to_string(num_chars) + "\n");
   command.push_back("    push " + label_addr + "\n");
-  command.push_back("    call s_output\n"); // Call the s_output function
+  command.push_back("    call s_output\n");
   command.push_back("    pop edx\n");
   command.push_back("    pop edx\n");
   command.push_back("    pop ebx\n");
@@ -498,7 +488,7 @@ std::vector<std::string> File::Write_Variable()
   {
     addr = "a" + std::to_string(variable[i]);
     command.push_back(addr);
-    command.push_back(" resd 1\n"); // Reserve space for one 32-bit value
+    command.push_back(" resd 1\n");
     i++;
   }
   return command;
@@ -541,7 +531,7 @@ void File::Get_Data()
         size++;
       }
     }
-    // std::cout << DataInit << ' ' << std::flush;
+
     else if (object[size] == STOP)
       size--;
 
@@ -574,7 +564,6 @@ int main(int argc, char *argv[])
 
   std::string filename = argv[1];
 
-  // Checks if .obj is already in the filename
   if (filename.size() < 4 || filename.substr(filename.size() - 4) != ".obj")
     filename += ".obj";
 
