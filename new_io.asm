@@ -263,7 +263,7 @@ output_to_string:
     
     mov eax, [ebp + 12]        ; Load the integer to convert (from EBP+12) into EAX
     mov esi, [ebp + 8]         ; Load the destination buffer address (from EBP+8) into ESI
-    add esi, 9                 ; Move to the end of the buffer (assuming max 9 digits)
+    add esi, 9                 ; Move to the end of the buffer
     mov byte [esi], 0          ; Null-terminate the string (set last byte to 0)
     
     mov ecx, 0                 ; ECX will count the digits
