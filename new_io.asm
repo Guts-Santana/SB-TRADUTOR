@@ -4,9 +4,9 @@
 MAX_BUFFER_SIZE_INPUT equ 12 ; Maximum size of the input buffer = 32 bit integer + '\n' + '\0'
 
 section .text
-global _start, input, output, overflow, s_input, s_output
+global _start, input, output, OVERFLOW, s_input, s_output
 
-overflow:
+OVERFLOW:
 	mov eax, 4                    
     mov ebx, 1                    
     mov ecx, output_overflow                     
