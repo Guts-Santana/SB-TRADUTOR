@@ -188,8 +188,9 @@ output_written:
 ; Input: EBP+8 - Pointer to the integer to print
 ;        EBP+12 - Buffer to store the converted string
 output:
-    enter 4, 0
-    mov byte [ebp-4], 0          ; Clear the negative flag
+    enter 0, 0
+    sub esp, 4                 ; Reserve space for the negative flag
+    mov byte [esp], 0          ; Clear the negative flag
 
     mov edi, [ebp + 8]          ; Get the pointer to the integer value
     mov esi, INPUT_BUFFER       ; Buffer to store the string representation
@@ -201,7 +202,7 @@ output:
 
     ; Handle negative numbers
     neg eax                     ; Negate the number
-    mov byte [ebp-4], 1           ; Set the negative flag
+    mov byte [esp], 1           ; Set the negative flag
 
 .positive_output:
     ; Convert the integer to a string
@@ -211,7 +212,7 @@ output:
     pop esi                     ; Restore buffer pointer
     pop ebx                     
 
-    cmp byte [ebp-4], 1           ; Check if the number was negative
+    cmp byte [esp], 1           ; Check if the number was negative
     jne .end_output             ; If not negative, jump to done
 
     dec eax
@@ -344,3 +345,47 @@ s_input:
 
     leave
     ret
+	global _start
+_start:
+    push ebx
+    push input_buffer
+    push a13
+    call input
+    pop edx
+    pop edx
+    pop ebx
+    push ebx
+    push input_buffer
+    push a14
+    call input
+    pop edx
+    pop edx
+    pop ebx
+	mov ebx, [a13]
+	imul ebx, [a14]
+	jo OVERFLOW
+	mov [a13], ebx
+    push ebx
+    push buffer
+    push a13
+    call output
+    pop edx
+    pop edx
+    pop ebx
+	mov eax, 1
+	mov ebx, 0
+	int 80h
+section .data
+  read_msg db 0, 'Quantidade de Bytes lidos: ', 0
+  len_read_msg equ $-read_msg
+  written_msg db 0, 'Quantidade de Bytes escritos: ', 0
+  len_written_msg equ $-written_msg
+  newline db 0xa, 0
+  minus_str db '-', 0
+  output_overflow db 'Deu Overflow', 0
+  len_overflow equ $-output_overflow
+section .bss
+  buffer resb 11
+  input_buffer resb 12
+a13 resd 1
+a14 resd 1

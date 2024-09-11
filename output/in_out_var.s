@@ -188,9 +188,8 @@ output_written:
 ; Input: EBP+8 - Pointer to the integer to print
 ;        EBP+12 - Buffer to store the converted string
 output:
-    enter 0, 0
-    sub esp, 4                 ; Reserve space for the negative flag
-    mov byte [esp], 0          ; Clear the negative flag
+    enter 4, 0
+    mov byte [ebp-4], 0          ; Clear the negative flag
 
     mov edi, [ebp + 8]          ; Get the pointer to the integer value
     mov esi, INPUT_BUFFER       ; Buffer to store the string representation
@@ -202,7 +201,7 @@ output:
 
     ; Handle negative numbers
     neg eax                     ; Negate the number
-    mov byte [esp], 1           ; Set the negative flag
+    mov byte [ebp-4], 1           ; Set the negative flag
 
 .positive_output:
     ; Convert the integer to a string
@@ -212,7 +211,7 @@ output:
     pop esi                     ; Restore buffer pointer
     pop ebx                     
 
-    cmp byte [esp], 1           ; Check if the number was negative
+    cmp byte [ebp-4], 1           ; Check if the number was negative
     jne .end_output             ; If not negative, jump to done
 
     dec eax
