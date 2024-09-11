@@ -9,7 +9,6 @@
 
 class File
 {
-  // Vou usar eax como acumulador e ebx e ecx para outras coisas
 private:
   std::vector<int32_t> object;
   std::string output_filename;
@@ -48,9 +47,6 @@ public:
   std::vector<std::string> Write_Const();
   std::vector<std::string> Write_Variable();
   std::vector<std::string> Write_JMP_ADDRESS();
-
-  // std::vector<std::string> Write_StrInput();
-  // std::vector<std::string> Write_StrOutput();
 };
 
 enum opcodes

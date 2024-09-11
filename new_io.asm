@@ -74,7 +74,6 @@ input:
 
 .store_result:
     mov [edi], eax                     ; Store the converted integer
-    mov eax, [edi]                     ; Load bytes read into eax for return
     leave
     ret
 

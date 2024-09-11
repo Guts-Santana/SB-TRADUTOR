@@ -73,7 +73,7 @@ input:
     call convert_to_int                ; Call conversion on unmodified buffer
 
 .store_result:
-
+    mov [edi], eax                     ; Store the converted integer
     leave
     ret
 
