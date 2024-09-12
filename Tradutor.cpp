@@ -10,24 +10,30 @@ void File::ReadFile(std::string filename)
   {
     throw std::invalid_argument("File not found");
   }
-  getline(file, line);
-  std::istringstream iss(line);
-
-  while (iss >> word)
+  while (getline(file, line))
   {
-    object.push_back(std::stoi(word));
-  }
+    if (line.empty())
+    {
+      continue;
+    }
+  	std::istringstream iss(line);
 
-  std::string output_dir = "output/";
+  	while (iss >> word)
+  	{
+  	  object.push_back(std::stoi(word));
+  	}
 
-  if (filename.size() > 9 && filename.substr(0, 9) == "arquivos/")
-  {
-    filename = filename.substr(9);
-  }
+  	std::string output_dir = "output/";
 
-  Get_Data();
+  	if (filename.size() > 9 && filename.substr(0, 9) == "arquivos/")
+  	{
+  	  filename = filename.substr(9);
+  	}
 
-  output_filename = output_dir + filename.substr(0, filename.size() - 3) + "s";
+  	Get_Data();
+
+  	output_filename = output_dir + filename.substr(0, filename.size() - 3) + "s";
+	}
 }
 
 void File::GetJumps()
