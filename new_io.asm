@@ -1,12 +1,13 @@
 %define INPUT_BUFFER [ebp+12]
 %define BUFFER [ebp+12]
+%define NEG_FLAG dword[ebp-4]
 
 MAX_BUFFER_SIZE_INPUT equ 12 ; Maximum size of the input buffer = 32 bit integer + '\n' + '\0'
 
 section .text
-global _start, input, output, overflow, s_input, s_output
+global _start, input, output, OVERFLOW, s_input, s_output
 
-overflow:
+OVERFLOW:
 	mov eax, 4                    
     mov ebx, 1                    
     mov ecx, output_overflow                     
@@ -40,20 +41,14 @@ input:
     mov edx, MAX_BUFFER_SIZE_INPUT     ; Buffer size
     int 0x80                           ; Perform syscall to read from stdin
 
-    mov ecx, eax                       ; Store number of bytes read to ecx
-
     pusha
-    push ecx                          ; Save the number of bytes read
+    push eax                          ; Save the number of bytes read
     call output_read                  ; Print the input message
-    pop ecx
     popa
 
     mov ecx, eax                       ; Store number of bytes read to ecx
     mov [edi], eax                     ; Store bytes read at the result pointer location for return
 
-    ; Prepare buffer for conversion
-    test eax, eax                      ; Check if read syscall succeeded
-    jz .error_read                     ; If zero, jump to error handler
     dec ecx                            ; Adjust for newline character
     movzx eax, byte [esi]              ; Load first character to check for negative
 
@@ -74,12 +69,6 @@ input:
 
 .store_result:
     mov [edi], eax                     ; Store the converted integer
-    mov eax, [edi]                     ; Load bytes read into eax for return
-    leave
-    ret
-
-.error_read:
-    mov eax, -1                        ; Indicate error by returning -1
     leave
     ret
 
@@ -127,12 +116,10 @@ output_read:
     pop edi                       ; Restore integer value
 
     ; Print the converted string
-    push eax                      ; Push pointer to string
-    push ecx                      ; Push length of string
+	mov edx, ecx
+	mov ecx, eax
     mov eax, 4                    ; sys_write
     mov ebx, 1                    ; stdout
-    pop edx                       ; Length of string
-    pop ecx                       ; Pointer to string
     int 0x80
 
     ; Print a new line
@@ -142,7 +129,7 @@ output_read:
     mov edx, 1                    ; Length of newline
     int 0x80
     leave
-    ret
+    ret 4
 
 
 ; -----------------------------------------------
@@ -168,11 +155,10 @@ output_written:
     pop edi                       ; Restore integer value
 
     ; Print the converted string
-    push eax                      ; Push pointer to string
+	mov edx, ecx                  ; Length of string
+    mov ecx, eax                      ; Push pointer to string
     mov eax, 4                    ; sys_write
     mov ebx, 1                    ; stdout
-    mov edx, ecx                  ; Length of string
-    pop ecx                       ; Pointer to string
     int 0x80
 
     ; Print a new line
@@ -182,16 +168,15 @@ output_written:
     mov edx, 1                    ; Length of newline
     int 0x80
     leave
-    ret
+    ret 4
 
 ; --------------------------------------------------
 ; Output: Print an integer to stdout
 ; Input: EBP+8 - Pointer to the integer to print
 ;        EBP+12 - Buffer to store the converted string
 output:
-    enter 0, 0
-    sub esp, 4                 ; Reserve space for the negative flag
-    mov byte [esp], 0          ; Clear the negative flag
+    enter 4, 0
+    mov dword [ebp - 4], 0          ; Clear the negative flag
 
     mov edi, [ebp + 8]          ; Get the pointer to the integer value
     mov esi, INPUT_BUFFER       ; Buffer to store the string representation
@@ -203,7 +188,7 @@ output:
 
     ; Handle negative numbers
     neg eax                     ; Negate the number
-    mov byte [esp], 1           ; Set the negative flag
+    mov NEG_FLAG, 1           ; Set the negative flag
 
 .positive_output:
     ; Convert the integer to a string
@@ -213,7 +198,7 @@ output:
     pop esi                     ; Restore buffer pointer
     pop ebx                     
 
-    cmp byte [esp], 1           ; Check if the number was negative
+    cmp dword NEG_FLAG, 1           ; Check if the number was negative
     jne .end_output             ; If not negative, jump to done
 
     dec eax
@@ -245,7 +230,6 @@ output:
     pusha
     push ecx                    ; Push length of string
     call output_written         ; Call show_output_msg
-    pop ecx                     ; Restore length of string
     popa
 
     ; Return the length of the string in EAX
@@ -288,17 +272,15 @@ output_to_string:
 ; Input: EBP+8 - Pointer to the memory location with the data to print
 ;        EBP+12 - Number of characters to print
 ; Output: Prints the data to stdout, returns number of bytes written in EAX
+
 s_output:
     enter 0, 0
     
-    ; Get parameters from the stack
-    mov ecx, [ebp + 8]  ; Memory address of the data to be printed (buffer)
-    mov edx, [ebp + 12] ; Number of characters to print
-
-    ; Syscall for writing data to stdout
-    mov eax, 4          ; Syscall number for sys_write
-    mov ebx, 1          ; File descriptor for stdout (1)
-    int 0x80            ; Call kernel
+    mov ecx, [ebp + 8]
+    mov edx, [ebp + 12]
+    mov eax, 4
+    mov ebx, 1
+    int 0x80       
 
     push eax
 
@@ -308,16 +290,10 @@ s_output:
     mov ecx, newline             ; Newline character
     mov edx, 1                    ; Length of newline
     int 0x80
-
-    pop ecx
-    push ecx 
     call output_written 
-    pop ecx
-
-    mov eax, ecx
     
     leave
-    ret
+    ret 4
 
 
 ; --------------------------------------------------
@@ -327,22 +303,14 @@ s_output:
 s_input:
     enter 0, 0
 
-    ; Get parameters from the stack
-    mov ecx, [ebp + 8]  ; Memory address where data will be stored (buffer)
-    mov edx, [ebp + 12] ; Number of characters to read
-
-    ; Syscall for reading data from stdin
-    mov eax, 3          ; Syscall number for sys_read
-    mov ebx, 0          ; File descriptor for stdin (0)
-    int 0x80            ; Call kernel
+    mov ecx, [ebp + 8] 
+    mov edx, [ebp + 12]
+    mov eax, 3
+    mov ebx, 0
+    int 0x80
 
     push eax
-    pop ecx
-    push ecx 
     call output_read 
-    pop ecx
-
-    mov eax, ecx
 
     leave
-    ret
+    ret 4

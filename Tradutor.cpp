@@ -452,7 +452,6 @@ std::vector<std::string> File::Write_S_INPUT()
   command.push_back("    push " + label_addr + "\n");
   command.push_back("    call s_input\n");
   command.push_back("    pop edx\n");
-  command.push_back("    pop edx\n");
   command.push_back("    pop ebx\n");
 
   return command;
@@ -468,7 +467,6 @@ std::vector<std::string> File::Write_S_OUTPUT()
   command.push_back("    push " + std::to_string(num_chars) + "\n");
   command.push_back("    push " + label_addr + "\n");
   command.push_back("    call s_output\n");
-  command.push_back("    pop edx\n");
   command.push_back("    pop edx\n");
   command.push_back("    pop ebx\n");
 
