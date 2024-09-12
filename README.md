@@ -36,7 +36,7 @@ O comando irá gerar um arquivo `in_out_var.asm` no diretório `output`, irá mo
 Para compilar o tradutor, basta executar o comando abaixo:
 
 ```bash
-g++ -o Tradutor Tradutor.cpp
+g++ -o tradutor Tradutor.cpp
 ```
 
 Para executar o tradutor, basta executar o comando abaixo:
