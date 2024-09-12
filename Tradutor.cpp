@@ -10,12 +10,19 @@ void File::ReadFile(std::string filename)
   {
     throw std::invalid_argument("File not found");
   }
-  getline(file, line);
-  std::istringstream iss(line);
 
-  while (iss >> word)
+  while (getline(file, line))
   {
-    object.push_back(std::stoi(word));
+    if (line.empty())
+    {
+      continue;
+    }
+
+    std::istringstream iss(line);
+    while (iss >> word)
+    {
+      object.push_back(std::stoi(word));
+    }
   }
 
   std::string output_dir = "output/";
