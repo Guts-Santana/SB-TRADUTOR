@@ -333,26 +333,16 @@ s_input:
 	global _start
 _start:
     push ebx
-    push input_buffer
-    push a13
-    call input
+    push 10
+    push a7
+    call s_input
     pop edx
     pop edx
     pop ebx
-	mov ebx, [a13]
     push ebx
-    push input_buffer
-    push a14
-    call input
-    pop edx
-    pop edx
-    pop ebx
-	add ebx, [a14]
-	mov [a13], ebx
-    push ebx
-    push buffer
-    push a13
-    call output
+    push 5
+    push a7
+    call s_output
     pop edx
     pop edx
     pop ebx
@@ -371,5 +361,5 @@ section .data
 section .bss
   buffer resb 11
   input_buffer resb 12
-a13 resd 1
-a14 resd 1
+a7 resd 1
+a8 resd 1

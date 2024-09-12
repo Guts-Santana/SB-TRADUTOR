@@ -334,28 +334,37 @@ s_input:
 _start:
     push ebx
     push input_buffer
-    push a13
+    push a38
     call input
     pop edx
     pop edx
     pop ebx
-	mov ebx, [a13]
-    push ebx
-    push input_buffer
-    push a14
-    call input
-    pop edx
-    pop edx
-    pop ebx
-	add ebx, [a14]
-	mov [a13], ebx
+	mov ebx, [a39]
+	mov [a36], ebx
+	mov ebx, [a40]
+	mov [a35], ebx
+	mov [a37], ebx
+jmp12:
+	mov ebx, [a36]
+	add ebx, [a35]
+	mov [a37], ebx
+	mov ebx, [a35]
+	mov [a36], ebx
     push ebx
     push buffer
-    push a13
+    push a36
     call output
     pop edx
     pop edx
     pop ebx
+	mov ebx, [a37]
+	mov [a35], ebx
+	sub ebx, [a38]
+	cmp ebx, 0
+	jg jmp34
+	cmp ebx, 0
+	jmp jmp12
+jmp34:
 	mov eax, 1
 	mov ebx, 0
 	int 80h
@@ -368,8 +377,12 @@ section .data
   minus_str db '-', 0
   output_overflow db 'Deu Overflow', 0
   len_overflow equ $-output_overflow
+a40 dd 1
 section .bss
   buffer resb 11
   input_buffer resb 12
-a13 resd 1
-a14 resd 1
+a35 resd 1
+a36 resd 1
+a37 resd 1
+a38 resd 1
+a39 resd 1

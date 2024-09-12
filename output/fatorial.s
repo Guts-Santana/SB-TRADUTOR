@@ -334,24 +334,27 @@ s_input:
 _start:
     push ebx
     push input_buffer
-    push a13
+    push a22
     call input
     pop edx
     pop edx
     pop ebx
-	mov ebx, [a13]
-    push ebx
-    push input_buffer
-    push a14
-    call input
-    pop edx
-    pop edx
-    pop ebx
-	add ebx, [a14]
-	mov [a13], ebx
+	mov ebx, [a22]
+jmp4:
+	sub ebx, [a23]
+	cmp ebx, 0
+	je jmp18
+	mov [a21], ebx
+	imul ebx, [a22]
+	jo OVERFLOW
+	mov [a22], ebx
+	mov ebx, [a21]
+	cmp ebx, 0
+	jmp jmp4
+jmp18:
     push ebx
     push buffer
-    push a13
+    push a22
     call output
     pop edx
     pop edx
@@ -368,8 +371,9 @@ section .data
   minus_str db '-', 0
   output_overflow db 'Deu Overflow', 0
   len_overflow equ $-output_overflow
+a23 dd 1
 section .bss
   buffer resb 11
   input_buffer resb 12
-a13 resd 1
-a14 resd 1
+a21 resd 1
+a22 resd 1
