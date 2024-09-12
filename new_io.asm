@@ -272,15 +272,17 @@ output_to_string:
 ; Input: EBP+8 - Pointer to the memory location with the data to print
 ;        EBP+12 - Number of characters to print
 ; Output: Prints the data to stdout, returns number of bytes written in EAX
-
 s_output:
     enter 0, 0
     
-    mov ecx, [ebp + 8]
-    mov edx, [ebp + 12]
-    mov eax, 4
-    mov ebx, 1
-    int 0x80       
+    ; Get parameters from the stack
+    mov ecx, [ebp + 8]  ; Memory address of the data to be printed (buffer)
+    mov edx, [ebp + 12] ; Number of characters to print
+
+    ; Syscall for writing data to stdout
+    mov eax, 4          ; Syscall number for sys_write
+    mov ebx, 1          ; File descriptor for stdout (1)
+    int 0x80            ; Call kernel
 
     push eax
 
@@ -290,10 +292,16 @@ s_output:
     mov ecx, newline             ; Newline character
     mov edx, 1                    ; Length of newline
     int 0x80
+
+    pop ecx
+    push ecx 
     call output_written 
+    pop ecx
+
+    mov eax, ecx
     
     leave
-    ret 4
+    ret
 
 
 ; --------------------------------------------------
@@ -303,14 +311,22 @@ s_output:
 s_input:
     enter 0, 0
 
-    mov ecx, [ebp + 8] 
-    mov edx, [ebp + 12]
-    mov eax, 3
-    mov ebx, 0
-    int 0x80
+    ; Get parameters from the stack
+    mov ecx, [ebp + 8]  ; Memory address where data will be stored (buffer)
+    mov edx, [ebp + 12] ; Number of characters to read
+
+    ; Syscall for reading data from stdin
+    mov eax, 3          ; Syscall number for sys_read
+    mov ebx, 0          ; File descriptor for stdin (0)
+    int 0x80            ; Call kernel
 
     push eax
+    pop ecx
+    push ecx 
     call output_read 
+    pop ecx
+
+    mov eax, ecx
 
     leave
-    ret 4
+    ret
